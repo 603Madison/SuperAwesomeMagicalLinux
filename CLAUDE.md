@@ -7,11 +7,19 @@ when changing it.
 ## Design
 
 Match the owner's apps (SuperAwesomeMagicalWeather, SuperAwesomeMagicalMusic, Cockpit-Manager):
-Lexend for all text, Material 3, the shared slate neutrals (`#0B1220` dark / `#F5F7FB` light) with
-Weather's blue as the default accent, soft rounded corners. The colour values live in
-`tools/schemes.py` (copied from Weather's `BrandColors.kt` and `Themes.kt`); regenerate the scheme
-files from it rather than editing them by hand. The sign-in theme
-(`system_files/usr/share/sddm/themes/superawesomemagical/Main.qml`) repeats the dark tokens.
+Lexend for all text, Material 3, the shared slate neutrals (`#0B1220` dark / `#F5F7FB` light), soft
+rounded corners.
+
+The SuperAwesomeMagical colours are the aurora's, purple and green (the owner's choice for the whole
+ecosystem from November 2026 on): primary `#CFBDFF` dark / `#5B3FD1` light (Music's violet),
+secondary `#6EF2B0` / `#0B7A4F`, tertiary the original blue `#8DB4FF` / `#2563EB`. That original
+blue scheme stays available as "Clear Sky". The values live in `tools/schemes.py`; regenerate the
+scheme files from it rather than editing them by hand. The sign-in theme
+(`system_files/usr/share/sddm/themes/superawesomemagical/Main.qml` and its `theme.conf`) repeats the
+dark tokens.
+
+The default wallpaper is a public-domain NPS photo (credits beside it); keep any new bundled image
+public domain or CC0/CC BY and credited in `CREDITS.md`.
 
 ## Pins and how to bump them
 

@@ -71,7 +71,12 @@ jobs:
           DATE: ${{ steps.meta.outputs.date }}
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | sudo podman login ghcr.io --username "${{ github.actor }}" --password-stdin
-          for tag in latest "${FEDORA_VERSION}" "${FEDORA_VERSION}-${DATE}"; do
-            sudo podman push --compression-format=zstd:chunked \
-              "localhost/${IMAGE_NAME}:latest" "${REGISTRY}/${IMAGE_NAME}:${tag}"
+          sudo podman push --compression-format=zstd:chunked \
+            "localhost/${IMAGE_NAME}:latest" "${REGISTRY}/${IMAGE_NAME}:latest"
+          # The other tags are copied inside the registry, so the image is compressed and uploaded
+          # once (pushing each tag from podman recompresses all of it every time).
+          command -v skopeo >/dev/null || sudo apt-get install -y skopeo
+          for tag in "${FEDORA_VERSION}" "${FEDORA_VERSION}-${DATE}"; do
+            sudo skopeo copy --all --preserve-digests \
+              "docker://${REGISTRY}/${IMAGE_NAME}:latest" "docker://${REGISTRY}/${IMAGE_NAME}:${tag}"
           done

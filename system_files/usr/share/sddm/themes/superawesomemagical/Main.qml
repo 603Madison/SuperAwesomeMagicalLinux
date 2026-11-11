@@ -2,7 +2,7 @@
 //
 // The ecosystem's look: Lexend throughout, a big light clock like Weather's temperature, and one
 // rounded slate card over the blurred wallpaper. Colours are the shared dark slate scheme with
-// Weather's blue as the accent; theme.conf can change the accent and wallpaper.
+// the brand's aurora purple and green as accents; theme.conf can change them and the wallpaper.
 
 import QtQuick
 import QtQuick.Effects
@@ -25,8 +25,9 @@ Rectangle {
         readonly property color inkMuted: "#A9B4C6"
         readonly property color outline: "#3B4A63"
         readonly property color outlineVariant: "#263349"
-        readonly property color primary: config.accent || "#8DB4FF"
-        readonly property color primaryInk: config.onAccent || "#0A1E4A"
+        readonly property color primary: config.accent || "#CFBDFF"
+        readonly property color primaryInk: config.onAccent || "#341A86"
+        readonly property color secondary: config.secondAccent || "#6EF2B0"
         readonly property color error: "#FF8A80"
     }
 
@@ -175,7 +176,7 @@ Rectangle {
             anchors { left: parent.left; right: parent.right; top: parent.top; margins: 32 }
             spacing: 16
 
-            // Avatar, or the first letter of the name on the accent.
+            // Avatar, or the first letter of the name, ringed in the aurora green.
             Item {
                 width: 88
                 height: 88
@@ -184,14 +185,14 @@ Rectangle {
                     id: avatarCircle
                     anchors.fill: parent
                     radius: width / 2
-                    color: Qt.alpha(c.primary, 0.18)
-                    border.color: Qt.alpha(c.primary, 0.5)
+                    color: Qt.alpha(c.secondary, 0.14)
+                    border.color: Qt.alpha(c.secondary, 0.6)
                     border.width: 2
                     Text {
                         anchors.centerIn: parent
                         visible: avatarImage.status !== Image.Ready
                         text: (root.user ? root.user.displayName : "").charAt(0).toUpperCase()
-                        color: c.primary
+                        color: c.secondary
                         font { family: root.font; weight: Font.DemiBold; pixelSize: 38 }
                     }
                 }

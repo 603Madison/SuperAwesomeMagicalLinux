@@ -1,18 +1,20 @@
 # SuperAwesomeMagicalLinux
 
 The SuperAwesomeMagical ecosystem's operating system: Fedora, image-based, with a desktop in the
-same look as the apps (Lexend everywhere, the slate-and-blue brand colours, soft rounded cards).
+same look as the apps: Lexend everywhere, the brand's aurora purple and green over cool slate, soft
+rounded cards.
 
-![The sign-in screen: a large Lexend clock and a rounded slate card over the aurora wallpaper](docs/screenshots/sign-in.jpg)
+![The sign-in screen: a large Lexend clock and a rounded slate card over a photo of purple and green northern lights](docs/screenshots/sign-in.jpg)
 
 - **Stable.** The whole OS is one tested image. Updates download in the background and apply on
   the next restart, and if one ever misbehaves the previous version is one command away
   (`sudo bootc rollback`). Apps install from Flathub and update separately.
 - **Fast.** Hyprland and Caelestia's shell are light, and Universal Blue's base brings hardware
   video decoding and codecs, so video plays on the GPU instead of the CPU.
-- **Good looking.** [Caelestia](https://github.com/caelestia-dots/shell)'s shell, in Lexend and
-  the SuperAwesomeMagical colours, plus Weather's themes (Harbor, Evergreen, Maple, Lupine, Aurora,
-  Driftwood) as colour schemes, a matching sign-in screen and an aurora-over-the-pines wallpaper.
+- **Good looking.** [Caelestia](https://github.com/caelestia-dots/shell)'s shell in Lexend and the
+  SuperAwesomeMagical colours (aurora purple and green), a matching sign-in screen, and a photo of
+  the northern lights over Yellowstone for the wallpaper. The original bright blue (Clear Sky) and
+  Weather's themes (Harbor, Evergreen, Maple, Lupine, Aurora, Driftwood) are there to switch to.
 
 ## What's in it
 
@@ -64,7 +66,8 @@ superawesomemagicallinux → Package settings).
 **Changing things.** Colours and wallpaper are in the shell's dashboard, or from a terminal:
 
 ```sh
-caelestia scheme set -n harbor          # or superawesomemagical, evergreen, maple, lupine, aurora, driftwood
+caelestia scheme set -n clearsky        # or superawesomemagical (the default), harbor, evergreen,
+                                        #    maple, lupine, aurora, driftwood
 caelestia scheme set -n dynamic         # colours from the wallpaper, Material You style
 caelestia scheme set -m light           # light mode
 ```
@@ -98,9 +101,12 @@ How it's put together:
   Hyprland and the rest and lays our files over the top (`build_files/build.sh`).
 - `system_files/`: copied onto the image as-is (sign-in theme, wallpapers, colour schemes,
   Hyprland entry config, session scripts, font and GTK defaults).
-- `tools/`: regenerate the wallpapers (`wallpapers.py`) and colour schemes (`schemes.py`).
+- `tools/`: regenerate the abstract wallpapers (`wallpapers.py`) and the colour schemes
+  (`schemes.py`, which holds the brand's colour values).
 
 ## Licence
 
 GPL-3.0, like Caelestia, whose shell and Hyprland config this builds on. Lexend and Material Symbols
-are under the SIL Open Font Licence and Apache 2.0 respectively.
+are under the SIL Open Font Licence and Apache 2.0 respectively. The default wallpaper is *Aurora
+borealis, Upper Geyser Basin* by NPS / Neal Herbert, a public-domain photo from Yellowstone National
+Park (see `system_files/usr/share/backgrounds/superawesomemagical/CREDITS.md`).

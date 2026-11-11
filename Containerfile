@@ -33,4 +33,5 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=tmpfs,dst=/tmp \
     FEDORA_VERSION="${FEDORA_VERSION}" IMAGE_REF="${IMAGE_REF}" /ctx/build.sh
 
-RUN bootc container lint
+# podman leaves the dnf cache mount's (empty) folder behind; nothing in /var should ship.
+RUN rm -rf /var/cache/libdnf5 && bootc container lint

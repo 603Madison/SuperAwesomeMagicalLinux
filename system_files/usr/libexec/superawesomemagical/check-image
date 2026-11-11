@@ -84,7 +84,7 @@ data = open("/usr/lib64/qt6/qml/Caelestia/lib/libcaelestia-config.so", "rb").rea
 utf16 = lambda s: s.encode("utf-16-le")  # how Qt string literals are stored
 sys.exit(not (utf16("Lexend") in data and utf16("GoogleSansFlex") not in data))'
 check "CLI and its colour library import" python3 -c 'import caelestia, materialyoucolor'
-for scheme in superawesomemagical harbor evergreen maple lupine aurora driftwood; do
+for scheme in superawesomemagical clearsky harbor evergreen maple lupine aurora driftwood; do
     check "scheme $scheme offered" sh -c "caelestia scheme list --names 2>/dev/null | grep -qw $scheme"
 done
 

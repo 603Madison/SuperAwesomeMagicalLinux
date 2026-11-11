@@ -5,11 +5,12 @@
     git clone https://github.com/caelestia-dots/cli /tmp/caelestia-cli
     python3 tools/schemes.py --cli /tmp/caelestia-cli
 
-The schemes are the ones SuperAwesomeMagicalWeather offers (its default bright blue, plus Harbor,
-Evergreen, Maple, Lupine, Aurora and Driftwood), in dark and light. For each one, Caelestia's own
-generator makes a complete scheme (terminal colours, app colours and so on) from the theme's
-primary colour, and then the Material colours are replaced with exactly the ones the apps use:
-the brand's slate neutrals, and for the named themes the same tinting Weather's schemeFrom() does.
+The schemes, in dark and light: SuperAwesomeMagical (the default, aurora purple and green), Clear
+Sky (the original bright blue), and SuperAwesomeMagicalWeather's named themes (Harbor, Evergreen,
+Maple, Lupine, Aurora, Driftwood). For each one, Caelestia's own generator makes a complete scheme
+(terminal colours, app colours and so on) from the primary colour, and then the Material colours
+are replaced with exactly the ones below: the brand's slate neutrals, and for the named themes the
+same tinting Weather's schemeFrom() does.
 
 Output: system_files/usr/share/superawesomemagical/schemes/<name>/default/<mode>.txt, in the
 CLI's scheme format (the image build links them into the CLI's scheme folder), and the default
@@ -25,13 +26,17 @@ from pathlib import Path
 
 OUT = Path(__file__).resolve().parent.parent / "system_files/usr/share/superawesomemagical/schemes"
 
-# ---- The apps' colours (ui/BrandColors.kt and ui/theme/Themes.kt in SuperAwesomeMagicalWeather) ----
+# ---- The colours ----
+#
+# SuperAwesomeMagical's colours are the aurora's: purple (primary) and green (secondary), with the
+# ecosystem's original blue as the tertiary accent, over the cool slate neutrals every app shares.
+# The purple is SuperAwesomeMagicalMusic's violet; the green is the aurora green of Weather's Aurora
+# theme (deepened a little in light mode so white text on it stays above 4.5:1).
+#
+# The neutrals, outline and error colours are Weather's (ui/BrandColors.kt), shared by all the apps.
 
-BRAND = {
+NEUTRALS = {
     "dark": dict(
-        primary="8DB4FF", onPrimary="0A1E4A", primaryContainer="1D3B85", onPrimaryContainer="DCE6FF",
-        secondary="7CCBF2", onSecondary="00344D", secondaryContainer="0D4A6B", onSecondaryContainer="D5EEFB",
-        tertiary="FFB86B", onTertiary="4A2304", tertiaryContainer="6B3A0C", onTertiaryContainer="FFE6C7",
         background="0B1220", onBackground="E5E9F0", surface="0B1220", onSurface="E5E9F0",
         surfaceVariant="1E293B", onSurfaceVariant="A9B4C6",
         surfaceContainerLowest="070C16", surfaceContainerLow="0F1828", surfaceContainer="131D30",
@@ -40,15 +45,44 @@ BRAND = {
         error="FF8A80", onError="5C0000", errorContainer="6B1515", onErrorContainer="FFDAD6",
     ),
     "light": dict(
-        primary="2563EB", onPrimary="FFFFFF", primaryContainer="DCE6FF", onPrimaryContainer="0B2A6B",
-        secondary="0E7FB8", onSecondary="FFFFFF", secondaryContainer="D5EEFB", onSecondaryContainer="07344C",
-        tertiary="B45309", onTertiary="FFFFFF", tertiaryContainer="FFE6C7", onTertiaryContainer="4A2304",
         background="F5F7FB", onBackground="111827", surface="F5F7FB", onSurface="111827",
         surfaceVariant="E4E9F2", onSurfaceVariant="4B5565",
         surfaceContainerLowest="FFFFFF", surfaceContainerLow="FBFCFE", surfaceContainer="FFFFFF",
         surfaceContainerHigh="EEF2F8", surfaceContainerHighest="E6EBF3",
         outline="B8C1CF", outlineVariant="DDE3EC",
         error="C62828", onError="FFFFFF", errorContainer="FFDAD6", onErrorContainer="410002",
+    ),
+}
+
+# The default: aurora purple and green.
+BRAND = {
+    "dark": dict(
+        primary="CFBDFF", onPrimary="341A86", primaryContainer="4B33A8", onPrimaryContainer="E9DDFF",
+        secondary="6EF2B0", onSecondary="003822", secondaryContainer="005233", onSecondaryContainer="C0FFD8",
+        tertiary="8DB4FF", onTertiary="0A1E4A", tertiaryContainer="1D3B85", onTertiaryContainer="DCE6FF",
+        **NEUTRALS["dark"],
+    ),
+    "light": dict(
+        primary="5B3FD1", onPrimary="FFFFFF", primaryContainer="E9DDFF", onPrimaryContainer="1D0060",
+        secondary="0B7A4F", onSecondary="FFFFFF", secondaryContainer="DDECE3", onSecondaryContainer="002112",
+        tertiary="2563EB", onTertiary="FFFFFF", tertiaryContainer="DCE6FF", onTertiaryContainer="0B2A6B",
+        **NEUTRALS["light"],
+    ),
+}
+
+# "Clear Sky": the ecosystem's original bright blue (Weather's default theme), still offered.
+CLEARSKY = {
+    "dark": dict(
+        primary="8DB4FF", onPrimary="0A1E4A", primaryContainer="1D3B85", onPrimaryContainer="DCE6FF",
+        secondary="7CCBF2", onSecondary="00344D", secondaryContainer="0D4A6B", onSecondaryContainer="D5EEFB",
+        tertiary="FFB86B", onTertiary="4A2304", tertiaryContainer="6B3A0C", onTertiaryContainer="FFE6C7",
+        **NEUTRALS["dark"],
+    ),
+    "light": dict(
+        primary="2563EB", onPrimary="FFFFFF", primaryContainer="DCE6FF", onPrimaryContainer="0B2A6B",
+        secondary="0E7FB8", onSecondary="FFFFFF", secondaryContainer="D5EEFB", onSecondaryContainer="07344C",
+        tertiary="B45309", onTertiary="FFFFFF", tertiaryContainer="FFE6C7", onTertiaryContainer="4A2304",
+        **NEUTRALS["light"],
     ),
 }
 
@@ -217,6 +251,7 @@ def main() -> None:
 
     for mode in ("dark", "light"):
         write("superawesomemagical", mode, full_scheme(BRAND[mode], mode))
+        write("clearsky", mode, full_scheme(CLEARSKY[mode], mode))
         if mode == "dark":
             # The same table `caelestia scheme set` writes to ~/.config/hypr/scheme/current.lua.
             lua = OUT.parent / "hypr/scheme/current.lua"
