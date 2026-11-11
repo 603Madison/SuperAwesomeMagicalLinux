@@ -13,19 +13,20 @@ Rectangle {
     height: 1080
     color: c.background
 
-    // The brand's dark scheme (the same tokens as the apps' BrandDarkColors).
+    // The brand's dark scheme (the apps' BrandDarkColors; "ink" is Material's on- colours, since QML
+    // reads property names starting with "on" as signal handlers).
     QtObject {
         id: c
         readonly property color background: "#0B1220"
         readonly property color surface: "#131D30"
         readonly property color surfaceHigh: "#1A2539"
         readonly property color surfaceHighest: "#223047"
-        readonly property color onSurface: "#E5E9F0"
-        readonly property color onSurfaceVariant: "#A9B4C6"
+        readonly property color ink: "#E5E9F0"
+        readonly property color inkMuted: "#A9B4C6"
         readonly property color outline: "#3B4A63"
         readonly property color outlineVariant: "#263349"
         readonly property color primary: config.accent || "#8DB4FF"
-        readonly property color onPrimary: config.onAccent || "#0A1E4A"
+        readonly property color primaryInk: config.onAccent || "#0A1E4A"
         readonly property color error: "#FF8A80"
     }
 
@@ -36,12 +37,15 @@ Rectangle {
     property int sessionIndex: sessionModel.lastIndex >= 0 ? sessionModel.lastIndex : 0
     property bool busy: false
     property string message: ""
+    // The current account and session, from the Repeaters below.
+    readonly property Item user: users.count > 0 ? users.itemAt(Math.min(userIndex, users.count - 1)) : null
+    readonly property Item session: sessions.count > 0 ? sessions.itemAt(Math.min(sessionIndex, sessions.count - 1)) : null
 
     function login() {
         if (busy) return
         busy = true
         message = ""
-        sddm.login(users.currentItem.userName, password.text, sessionIndex)
+        sddm.login(root.user ? root.user.userName : "", password.text, sessionIndex)
     }
 
     Connections {
@@ -63,35 +67,49 @@ Rectangle {
         onTriggered: root.now = new Date()
     }
 
-    // Models read through invisible views, so the current user's and session's roles are easy to reach.
-    ListView {
-        id: users
+    // SDDM's accounts and sessions, one invisible item each (a Repeater makes them all, visible or
+    // not), so the current one's details are easy to reach.
+    Item {
         visible: false
-        model: userModel
-        currentIndex: root.userIndex
-        delegate: Item {
-            property string userName: model.name
-            property string displayName: model.realName || model.name
-            property string avatar: model.icon || ""
+        Repeater {
+            id: users
+            model: userModel
+            delegate: Item {
+                required property string name
+                required property string realName
+                required property string icon
+                readonly property string userName: name
+                readonly property string displayName: realName || name
+                readonly property string avatar: icon
+            }
+        }
+        Repeater {
+            id: sessions
+            model: sessionModel
+            delegate: Item {
+                required property string name
+                readonly property string sessionName: name
+            }
         }
     }
-    ListView {
-        id: sessions
-        visible: false
-        model: sessionModel
-        currentIndex: root.sessionIndex
-        delegate: Item { property string sessionName: model.name }
+
+    // 12-hour like the apps, without AM/PM (like a phone's lock screen); clock24=true in theme.conf
+    // for 24-hour.
+    function clockText(d) {
+        if (String(config.clock24) === "true")
+            return Qt.formatTime(d, "HH:mm")
+        return ((d.getHours() + 11) % 12 + 1) + ":" + Qt.formatTime(d, "mm")
     }
 
     // ---- Backdrop: the wallpaper, softly blurred and dimmed towards the bottom ----
 
+    // The plain wallpaper underneath, so it shows even where the blur can't be drawn.
     Image {
         id: wallpaper
         anchors.fill: parent
         source: config.background
         fillMode: Image.PreserveAspectCrop
         asynchronous: false
-        visible: false
     }
     MultiEffect {
         anchors.fill: parent
@@ -118,14 +136,14 @@ Rectangle {
         spacing: 4
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
-            text: Qt.formatTime(root.now, config.clockFormat || "h:mm")
-            color: c.onSurface
+            text: root.clockText(root.now)
+            color: c.ink
             font { family: root.font; weight: Font.Light; pixelSize: Math.round(root.height * 0.13); letterSpacing: -2 }
         }
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
             text: Qt.formatDate(root.now, "dddd, MMMM d")
-            color: c.onSurfaceVariant
+            color: c.inkMuted
             font { family: root.font; weight: Font.Medium; pixelSize: Math.round(root.height * 0.024) }
         }
     }
@@ -172,7 +190,7 @@ Rectangle {
                     Text {
                         anchors.centerIn: parent
                         visible: avatarImage.status !== Image.Ready
-                        text: (users.currentItem ? users.currentItem.displayName : "?").charAt(0).toUpperCase()
+                        text: (root.user ? root.user.displayName : "").charAt(0).toUpperCase()
                         color: c.primary
                         font { family: root.font; weight: Font.DemiBold; pixelSize: 38 }
                     }
@@ -181,7 +199,7 @@ Rectangle {
                     id: avatarImage
                     anchors.fill: parent
                     anchors.margins: 2
-                    source: users.currentItem && users.currentItem.avatar ? users.currentItem.avatar : ""
+                    source: root.user && root.user.avatar ? root.user.avatar : ""
                     fillMode: Image.PreserveAspectCrop
                     visible: false
                 }
@@ -206,20 +224,20 @@ Rectangle {
                 anchors.horizontalCenter: parent.horizontalCenter
                 spacing: 8
                 IconButton {
-                    visible: userModel.count > 1
+                    visible: users.count > 1
                     glyph: "chevron_left"
-                    onClicked: root.userIndex = (root.userIndex + userModel.count - 1) % userModel.count
+                    onClicked: root.userIndex = (root.userIndex + users.count - 1) % users.count
                 }
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
-                    text: users.currentItem ? users.currentItem.displayName : ""
-                    color: c.onSurface
+                    text: root.user ? root.user.displayName : ""
+                    color: c.ink
                     font { family: root.font; weight: Font.DemiBold; pixelSize: 22 }
                 }
                 IconButton {
-                    visible: userModel.count > 1
+                    visible: users.count > 1
                     glyph: "chevron_right"
-                    onClicked: root.userIndex = (root.userIndex + 1) % userModel.count
+                    onClicked: root.userIndex = (root.userIndex + 1) % users.count
                 }
             }
 
@@ -237,7 +255,7 @@ Rectangle {
                     id: lockGlyph
                     anchors { left: parent.left; leftMargin: 16; verticalCenter: parent.verticalCenter }
                     text: "lock"
-                    color: c.onSurfaceVariant
+                    color: c.inkMuted
                     font { family: root.icons; pixelSize: 22 }
                 }
                 TextInput {
@@ -245,7 +263,7 @@ Rectangle {
                     anchors { left: lockGlyph.right; leftMargin: 12; right: parent.right; rightMargin: 16; verticalCenter: parent.verticalCenter }
                     echoMode: TextInput.Password
                     passwordCharacter: "•"
-                    color: c.onSurface
+                    color: c.ink
                     selectionColor: Qt.alpha(c.primary, 0.4)
                     font { family: root.font; pixelSize: 17; letterSpacing: 1 }
                     focus: true
@@ -257,7 +275,7 @@ Rectangle {
                         anchors.verticalCenter: parent.verticalCenter
                         visible: !password.text
                         text: "Password"
-                        color: c.onSurfaceVariant
+                        color: c.inkMuted
                         font { family: root.font; pixelSize: 16 }
                     }
                 }
@@ -274,7 +292,7 @@ Rectangle {
                 Text {
                     anchors.centerIn: parent
                     text: root.busy ? "Signing in…" : "Sign in"
-                    color: c.onPrimary
+                    color: c.primaryInk
                     font { family: root.font; weight: Font.DemiBold; pixelSize: 16 }
                 }
                 MouseArea {
@@ -292,7 +310,7 @@ Rectangle {
                 text: root.message.length > 0 ? root.message : "Caps Lock is on"
                 horizontalAlignment: Text.AlignHCenter
                 wrapMode: Text.Wrap
-                color: root.message.length > 0 ? c.error : c.onSurfaceVariant
+                color: root.message.length > 0 ? c.error : c.inkMuted
                 font { family: root.font; weight: Font.Medium; pixelSize: 14 }
                 QtObject { id: capsLock; readonly property bool on: keyboard.capsLock }
             }
@@ -306,9 +324,9 @@ Rectangle {
         spacing: 8
         Chip {
             glyph: "desktop_windows"
-            label: sessions.currentItem ? sessions.currentItem.sessionName : ""
-            visible: sessionModel.rowCount() > 0
-            onClicked: root.sessionIndex = (root.sessionIndex + 1) % sessionModel.rowCount()
+            label: root.session ? root.session.sessionName : ""
+            visible: sessions.count > 0
+            onClicked: root.sessionIndex = (root.sessionIndex + 1) % sessions.count
         }
     }
     Row {
@@ -333,7 +351,7 @@ Rectangle {
         Text {
             anchors.centerIn: parent
             text: btn.glyph
-            color: c.onSurfaceVariant
+            color: c.inkMuted
             font { family: root.icons; pixelSize: 24 }
         }
         MouseArea { id: area; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: btn.clicked() }
@@ -358,13 +376,13 @@ Rectangle {
             Text {
                 anchors.verticalCenter: parent.verticalCenter
                 text: chip.glyph
-                color: c.onSurface
+                color: c.ink
                 font { family: root.icons; pixelSize: 20 }
             }
             Text {
                 anchors.verticalCenter: parent.verticalCenter
                 text: chip.label
-                color: c.onSurface
+                color: c.ink
                 font { family: root.font; weight: Font.Medium; pixelSize: 14 }
             }
         }

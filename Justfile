@@ -54,3 +54,14 @@ vm:
 # Redraw the wallpapers
 wallpapers:
     python3 tools/wallpapers.py
+
+# Render the sign-in screen to ./output/sddm.png (and sddm-failed.png) using the built image
+signin-preview:
+    mkdir -p output
+    for state in "" "--failed"; do \
+        sudo podman run --rm -v ./tools:/preview:ro,z -v ./output:/out:z \
+            -v ./system_files/usr/share/sddm/themes/superawesomemagical:/theme:ro,z \
+            -v ./system_files/usr/share/backgrounds/superawesomemagical:/wp:ro,z \
+            -e QT_QPA_PLATFORM=offscreen -e QT_FORCE_STDERR_LOGGING=1 \
+            {{image}}:latest /usr/lib64/qt6/bin/qml /preview/signin-preview.qml -- $state; \
+    done

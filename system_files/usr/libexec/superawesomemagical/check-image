@@ -100,7 +100,7 @@ check "sddm enabled" systemctl is-enabled sddm.service
 check "boots to the desktop" sh -c '[ "$(systemctl get-default)" = graphical.target ]'
 check "GTK defaults compiled" test -f /etc/dconf/db/local
 check "branded" grep -q '^NAME="SuperAwesomeMagicalLinux"' /usr/lib/os-release
-check "Hyprland COPR switched off for installs" sh -c '! grep -q "^enabled=1" /etc/yum.repos.d/_copr:copr.fedorainfracloud.org:lionheartp:Hyprland.repo'
+check "Hyprland COPR switched off for installs" sh -c 'f=$(grep -l lionheartp/Hyprland /etc/yum.repos.d/*.repo) && ! grep -q "^enabled=1" $f'
 
 echo
 if [ "$failures" -eq 0 ]; then

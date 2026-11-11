@@ -16,13 +16,14 @@ SYMBOLS_REV=10ecc14790612ca8fd164e3f4ffe9c16fc50d5b7 # google/material-design-ic
 SYMBOLS_SHA256=7e74e36533ccee12c2b81e75bfcf3ccf123d3bb7e7e46d65d94445f23db0c97c
 
 HYPR_COPR=lionheartp/Hyprland
-HYPR_REPO="/etc/yum.repos.d/_copr:copr.fedorainfracloud.org:lionheartp:Hyprland.repo"
 
 ### Repositories ##################################################################################
 
 # Fedora dropped Hyprland in 2025; this COPR keeps it (and its companion tools) built for current
 # Fedora. Quickshell is compiled in stage 1 against this image's Qt, so never take the COPR's.
 dnf -y copr enable "$HYPR_COPR"
+HYPR_REPO=$(grep -l 'lionheartp/Hyprland' /etc/yum.repos.d/*.repo)
+test "$(echo "$HYPR_REPO" | wc -l)" -eq 1
 echo "excludepkgs=quickshell*" >> "$HYPR_REPO"
 
 ### Packages ######################################################################################
@@ -168,4 +169,6 @@ fc-cache -f
 
 # Installed systems don't need the COPR switched on; the image already carries what it built.
 sed -i 's/^enabled=1/enabled=0/' "$HYPR_REPO"
+# Stage 1's build leftovers that only compiling against libcava needs.
+rm -rf /usr/include/cava /usr/lib64/pkgconfig/libcava.pc
 rm -rf /tmp/dots /var/lib/dnf/repos /var/log/dnf5.log* /var/log/hawkey.log

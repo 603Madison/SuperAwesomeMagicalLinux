@@ -89,7 +89,7 @@ sed -i \
 test "$(grep -c 'u"Lexend"_s' plugin/src/Caelestia/Config/appearanceconfig.hpp)" -eq 6
 ! grep -q 'GoogleSansFlex"_s\|Rubik"_s\|CaskaydiaCove' plugin/src/Caelestia/Config/appearanceconfig.hpp
 # Our wallpaper when none has been chosen yet.
-python3 -c "from PIL import Image; Image.open('/ctx-files/usr/share/backgrounds/superawesomemagical/aurora.jpg').save('assets/wallpaper.webp', quality=90)"
+python3 -c "from PIL import Image; Image.open('/ctx/aurora.jpg').save('assets/wallpaper.webp', quality=90)"
 cmake -S . -B build -G Ninja \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=/usr \

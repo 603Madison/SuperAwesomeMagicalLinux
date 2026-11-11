@@ -13,9 +13,10 @@ FROM scratch AS ctx
 COPY build_files /
 
 # ---- Stage 1: compile Caelestia's shell and CLI against the same Fedora the image ships ----
+# (Only the files it uses are mounted, so changing anything else doesn't force a recompile.)
 FROM ${BASE_IMAGE}:${FEDORA_VERSION} AS caelestia
-RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
-    --mount=type=bind,source=system_files,target=/ctx-files \
+RUN --mount=type=bind,from=ctx,source=/caelestia.sh,target=/ctx/caelestia.sh \
+    --mount=type=bind,source=system_files/usr/share/backgrounds/superawesomemagical/aurora.jpg,target=/ctx/aurora.jpg \
     --mount=type=cache,dst=/var/cache/libdnf5 \
     --mount=type=tmpfs,dst=/tmp \
     /ctx/caelestia.sh
