@@ -1,0 +1,3 @@
+# Disk images and ISOs from `just iso` / `just qcow2`
+/output/
+__pycache__/
