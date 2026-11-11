@@ -1,0 +1,10 @@
+{
+    "theme": {
+        "enableDiscord": false,
+        "enableSpicetify": false,
+        "enablePandora": false,
+        "enableWarp": false,
+        "enableChromium": false,
+        "enableZed": false
+    }
+}

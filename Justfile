@@ -63,5 +63,6 @@ signin-preview:
             -v ./system_files/usr/share/sddm/themes/superawesomemagical:/theme:ro,z \
             -v ./system_files/usr/share/backgrounds/superawesomemagical:/wp:ro,z \
             -e QT_QPA_PLATFORM=offscreen -e QT_FORCE_STDERR_LOGGING=1 \
-            {{image}}:latest /usr/lib64/qt6/bin/qml /preview/signin-preview.qml -- $state; \
+            {{image}}:latest sh -c "dnf -q -y install qt6-qtdeclarative-devel >/dev/null && \
+            /usr/lib64/qt6/bin/qml /preview/signin-preview.qml -- $state"; \
     done

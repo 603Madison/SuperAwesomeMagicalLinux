@@ -8,14 +8,16 @@ share=/usr/share/superawesomemagical
 
 mkdir -p "$config/caelestia" "$config/hypr/scheme"
 
-# The shell's settings (its own settings screen edits this file).
+# The shell's settings (its own settings screen edits this file), and the CLI's, which leave out
+# theming for apps the image doesn't have.
 [ -e "$config/caelestia/shell.json" ] || cp "$share/caelestia/shell.json" "$config/caelestia/shell.json"
+[ -e "$config/caelestia/cli.json" ] || cp "$share/caelestia/cli.json" "$config/caelestia/cli.json"
 
 # Places for the person's own Hyprland changes, with a note on how to use them.
 [ -e "$config/caelestia/hypr-vars.lua" ] || cat > "$config/caelestia/hypr-vars.lua" <<'EOF'
--- Change any of the desktop's settings here; the full list, with what SuperAwesomeMagicalLinux
--- starts from, is in /usr/share/superawesomemagical/hypr/caelestia/variables.lua.
--- Changes apply right away.
+-- Change any of the desktop's settings here. The full list is Caelestia's, in
+-- /usr/share/superawesomemagical/hypr/caelestia/variables.lua; SuperAwesomeMagicalLinux's own
+-- changes to it are in /usr/share/superawesomemagical/hypr/hyprland.lua. Changes apply right away.
 return {
     -- windowRounding = 10,
     -- kbTerminal = "SUPER + Return",

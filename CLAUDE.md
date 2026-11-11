@@ -18,8 +18,8 @@ files from it rather than editing them by hand. The sign-in theme
 - Caelestia shell + CLI, Quickshell, M3Shapes, libcava: top of `build_files/caelestia.sh`. Take
   Quickshell's and M3Shapes' revisions from the new shell release's `flake.lock`.
 - Caelestia dotfiles (Hyprland config): `DOTS_REV` in `build_files/build.sh`, matched to the
-  Hyprland version the `lionheartp/Hyprland` COPR ships (Hyprland's config is Lua since 0.55-ish
-  and its API still moves). `build.sh` patches a few lines of the dotfiles and fails loudly if they
+  Hyprland version the `lionheartp/Hyprland` COPR ships (its 0.57 takes Lua configs, and the Lua
+  API still moves; `check-image` runs Hyprland's own config check, so a mismatch fails CI). `build.sh` patches a few lines of the dotfiles and fails loudly if they
   no longer match; fix the patch list rather than loosening it.
 - Fonts: revisions and SHA-256s at the top of `build.sh`.
 - Fedora version: `FEDORA_VERSION` in the workflow, `Containerfile` and `Justfile`.
@@ -54,5 +54,17 @@ depends on.
     --build-arg https_proxy=$HTTPS_PROXY -t localhost/superawesomemagicallinux .
   docker run --rm localhost/superawesomemagicallinux /usr/libexec/superawesomemagical/check-image
   ```
-- There's no KVM or GPU, so the desktop itself can't be run; `check-image` and offscreen QML
-  renders are what can be verified.
+- There's no KVM or GPU, so the desktop itself can't be run. What can be verified:
+  `check-image`; `bootc container lint`; Hyprland's own config check, as a non-root user after
+  `user-setup` (`useradd -m t; su - t -c "/usr/libexec/superawesomemagical/user-setup;
+  XDG_RUNTIME_DIR=/tmp Hyprland --verify-config --config /usr/share/superawesomemagical/hypr/hyprland.lua"`);
+  and the sign-in screen rendered offscreen (`tools/signin-preview.qml`, see `just signin-preview`;
+  Fedora's Qt logs to the journal unless `QT_FORCE_STDERR_LOGGING=1`).
+- The image is ~12 GB unpacked on a ~10 GB base and the sandbox's disk allowance is ~30 GB: delete
+  old images and run `docker builder prune -f` between builds, and keep the stage 1 cache.
+
+## QML gotchas met so far
+
+- Property names starting with `on` + a capital are read as signal handlers, so Material's
+  `onSurface`-style token names can't be QML properties (the sign-in theme calls them `ink`).
+- Hidden or zero-size `ListView`s don't create delegates; use a `Repeater` to read model rows.

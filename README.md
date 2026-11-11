@@ -3,6 +3,8 @@
 The SuperAwesomeMagical ecosystem's operating system: Fedora, image-based, with a desktop in the
 same look as the apps (Lexend everywhere, the slate-and-blue brand colours, soft rounded cards).
 
+![The sign-in screen: a large Lexend clock and a rounded slate card over the aurora wallpaper](docs/screenshots/sign-in.jpg)
+
 - **Stable.** The whole OS is one tested image. Updates download in the background and apply on
   the next restart, and if one ever misbehaves the previous version is one command away
   (`sudo bootc rollback`). Apps install from Flathub and update separately.
@@ -36,8 +38,9 @@ systemctl reboot
 ```
 
 Either way, the system then follows `ghcr.io/603madison/superawesomemagicallinux:latest`, which
-CI rebuilds every day. The image package has to be public for installed systems to download
-updates without signing in to GitHub (Packages → superawesomemagicallinux → Package settings).
+CI rebuilds twice a week (Mondays and Thursdays) with Fedora's latest updates. The image package has
+to be public for installed systems to download updates without signing in to GitHub (Packages →
+superawesomemagicallinux → Package settings).
 
 ## Using it
 
@@ -77,8 +80,8 @@ updates have to work around, so prefer the other two.
 
 ## Building
 
-CI (`.github/workflows/build.yml`) builds on every push and daily, runs the image's own checks, and
-publishes from the default branch. To build locally on Linux with podman and
+CI (`.github/workflows/build.yml`) builds on every push and twice a week, runs the image's own
+checks, and publishes from the default branch. To build locally on Linux with podman and
 [just](https://just.systems):
 
 ```sh

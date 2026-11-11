@@ -171,4 +171,8 @@ fc-cache -f
 sed -i 's/^enabled=1/enabled=0/' "$HYPR_REPO"
 # Stage 1's build leftovers that only compiling against libcava needs.
 rm -rf /usr/include/cava /usr/lib64/pkgconfig/libcava.pc
-rm -rf /tmp/dots /var/lib/dnf/repos /var/log/dnf5.log* /var/log/hawkey.log
+# /run and /var aren't part of what an installed system takes from the image (bootc container lint
+# flags them): runtime state goes, and tuned's folders are made at boot by tmpfiles.d instead.
+rm -rf /tmp/dots /run/dnf /run/sddm /run/tuned \
+    /var/lib/dnf/repos /var/log/dnf5.log* /var/log/hawkey.log \
+    /var/cache/swcatalog /var/cache/ldconfig /var/lib/tuned /var/log/tuned

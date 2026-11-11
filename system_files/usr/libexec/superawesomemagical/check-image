@@ -78,7 +78,11 @@ check "Material Symbols Rounded installed" sh -c 'fc-list "Material Symbols Roun
 
 echo "Shell and colours"
 check "Caelestia's shell installed" test -f /etc/xdg/quickshell/caelestia/shell.qml
-check "shell defaults to Lexend" grep -raq Lexend /usr/lib64/qt6/qml/Caelestia
+check "shell defaults to Lexend" python3 -c '
+import sys
+data = open("/usr/lib64/qt6/qml/Caelestia/lib/libcaelestia-config.so", "rb").read()
+utf16 = lambda s: s.encode("utf-16-le")  # how Qt string literals are stored
+sys.exit(not (utf16("Lexend") in data and utf16("GoogleSansFlex") not in data))'
 check "CLI and its colour library import" python3 -c 'import caelestia, materialyoucolor'
 for scheme in superawesomemagical harbor evergreen maple lupine aurora driftwood; do
     check "scheme $scheme offered" sh -c "caelestia scheme list --names 2>/dev/null | grep -qw $scheme"
@@ -92,6 +96,22 @@ check "polkit agent patched for Fedora" grep -q /usr/libexec/hyprpolkitagent "$h
 check "start-shell wired up" grep -q superawesomemagical/start-shell "$hypr/caelestia/hyprland/execs.lua"
 check "no Arch-only qtengine" sh -c "! grep -q qtengine '$hypr/caelestia/hyprland/env.lua'"
 check "only our session offered" sh -c 'ls /usr/share/wayland-sessions/ | grep -qx superawesomemagical.desktop && [ "$(ls /usr/share/wayland-sessions/ | wc -l)" -eq 1 ]'
+
+# Hyprland's own check of the whole config, as a new account would get it. Only inside a container
+# (CI, `just check`), since it makes a throwaway account.
+if [ -e /run/.containerenv ] || [ -e /.dockerenv ]; then
+    if id hyprcheck >/dev/null 2>&1 || useradd -m hyprcheck >/dev/null 2>&1; then
+        result=$(su - hyprcheck -c "/usr/libexec/superawesomemagical/user-setup >/dev/null 2>&1;
+            XDG_RUNTIME_DIR=/tmp Hyprland --verify-config --config $hypr/hyprland.lua 2>&1" | tail -5)
+        if grep -q "^config ok" <<<"$result"; then
+            pass "Hyprland accepts the config"
+        else
+            fail "Hyprland rejects the config: $(tr '\n' ' ' <<<"$result")"
+        fi
+    else
+        fail "couldn't make an account to check the Hyprland config with"
+    fi
+fi
 
 echo "Sign-in and system"
 check "sign-in theme" test -f /usr/share/sddm/themes/superawesomemagical/Main.qml
