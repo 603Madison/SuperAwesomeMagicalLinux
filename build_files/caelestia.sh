@@ -21,7 +21,10 @@ LIBCAVA_REV=f4b69943ea7fecbbeec97fac8e73af03b39be499    # LukashonakV/cava 0.10.
 MATERIALYOUCOLOR_VERSION=3.0.4
 
 OUT=/out
-SRC=/tmp/src
+# Compiled on disk, not in /tmp: /tmp here is a RAM-backed tmpfs, and on GitHub's runners podman caps
+# it well below what Quickshell's and the shell's builds (precompiled headers especially) need.
+# Each build folder goes as soon as its install is done.
+SRC=/var/tmp/sam-src
 mkdir -p "$OUT" "$SRC"
 
 # Fetch one commit of a GitHub repo; the commit hash pins the contents.
@@ -49,11 +52,12 @@ dnf -y install --setopt=install_weak_deps=False \
     libqalculate-devel aubio-devel lm_sensors-devel fftw-devel iniparser-devel \
     python3-devel python3-pip python3-build python3-installer python3-hatchling python3-hatch-vcs python3-pillow
 
-# ---- Quickshell (configured as Fedora's quickshell.spec does; the crash handler is off because it
-# needs cpptrace, which Fedora doesn't package) ----
+# ---- Quickshell (configured as Fedora's quickshell.spec does, except as a plain Release build:
+# without debug info it builds in a fraction of the space and ships a far smaller binary. The crash
+# handler is off because it needs cpptrace, which Fedora doesn't package.) ----
 fetch quickshell-mirror/quickshell "$QUICKSHELL_REV" quickshell
 cmake -S "$SRC/quickshell" -B "$SRC/quickshell/build" -G Ninja \
-    -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+    -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DCMAKE_SKIP_INSTALL_RPATH=ON \
     -DDISTRIBUTOR="SuperAwesomeMagicalLinux" \
@@ -63,6 +67,7 @@ cmake -S "$SRC/quickshell" -B "$SRC/quickshell/build" -G Ninja \
     -DGIT_REVISION="$QUICKSHELL_REV"
 cmake --build "$SRC/quickshell/build"
 install_both cmake --install "$SRC/quickshell/build"
+rm -rf "$SRC/quickshell/build"
 
 # ---- M3Shapes: Material 3 shapes for QML ----
 fetch soramanew/m3shapes "$M3SHAPES_REV" m3shapes
@@ -70,12 +75,14 @@ cmake -S "$SRC/m3shapes" -B "$SRC/m3shapes/build" -G Ninja \
     -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr -DINSTALL_QMLDIR=lib64/qt6/qml
 cmake --build "$SRC/m3shapes/build"
 install_both cmake --install "$SRC/m3shapes/build"
+rm -rf "$SRC/m3shapes/build"
 
 # ---- libcava: the audio visualiser's library ----
 fetch LukashonakV/cava "$LIBCAVA_REV" cava
 meson setup "$SRC/cava/build" "$SRC/cava" --prefix=/usr --libdir=lib64 --buildtype=release
 meson compile -C "$SRC/cava/build"
 install_both meson install -C "$SRC/cava/build"
+rm -rf "$SRC/cava/build"
 
 # ---- Caelestia shell ----
 fetch caelestia-dots/shell "$SHELL_REV" shell
@@ -101,6 +108,7 @@ cmake -S . -B build -G Ninja \
     -DINSTALL_QSCONFDIR=/etc/xdg/quickshell/caelestia
 cmake --build build
 DESTDIR=$OUT cmake --install build
+rm -rf build
 
 # ---- Caelestia CLI (and materialyoucolor, which Fedora doesn't package) ----
 fetch caelestia-dots/cli "$CLI_REV" cli
@@ -115,5 +123,7 @@ for p in quickshell m3shapes cava shell cli; do
     install -Dm644 "$SRC/$p/LICENSE"* -t "$OUT/usr/share/licenses/superawesomemagical/$p/" 2>/dev/null || true
 done
 
+cd /
+rm -rf "$SRC"
 find "$OUT" -name '__pycache__' -prune -exec rm -rf {} +
 find "$OUT" -maxdepth 4 | sort
