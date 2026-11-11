@@ -1,0 +1,10 @@
+{
+    "general": {
+        "apps": {
+            "terminal": ["foot"],
+            "audio": ["pavucontrol"],
+            "playback": ["mpv"],
+            "explorer": ["nautilus"]
+        }
+    }
+}

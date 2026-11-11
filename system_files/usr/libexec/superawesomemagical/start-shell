@@ -1,0 +1,15 @@
+#!/usr/bin/bash
+# Run by Hyprland as the desktop starts: on an account's first sign-in, switch it to the
+# SuperAwesomeMagical colours and wallpaper (the CLI themes the terminal, GTK apps and Hyprland
+# along with the shell), then start the shell.
+
+state=${XDG_STATE_HOME:-$HOME/.local/state}
+
+if [ ! -e "$state/caelestia/scheme.json" ]; then
+    caelestia scheme set --name superawesomemagical --flavour default --mode dark || true
+fi
+if [ ! -e "$state/caelestia/wallpaper/path.txt" ]; then
+    caelestia wallpaper --file /usr/share/backgrounds/superawesomemagical/aurora.jpg || true
+fi
+
+exec caelestia shell -d

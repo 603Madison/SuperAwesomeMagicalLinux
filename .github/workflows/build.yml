@@ -1,0 +1,74 @@
+name: Build image
+
+# Builds the OS image and, on the default branch, publishes it to GitHub's container registry.
+# Installed systems update from there, so the daily rebuild is how Fedora's and Universal Blue's
+# fixes reach them. Other branches and pull requests only build and check.
+
+on:
+  push:
+    paths-ignore: ["**.md", "tools/**", ".github/workflows/build-iso.yml", "disk_config/**"]
+  pull_request:
+    paths-ignore: ["**.md", "tools/**"]
+  schedule:
+    - cron: "17 7 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  IMAGE_NAME: superawesomemagicallinux
+  FEDORA_VERSION: "45"
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Make room on the runner
+        run: |
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc /usr/local/.ghcup \
+            /opt/hostedtoolcache/CodeQL /usr/share/swift /usr/local/share/powershell
+          sudo docker image prune --all --force > /dev/null || true
+          df -h /
+
+      - uses: actions/checkout@v4
+
+      - name: Work out names and tags
+        id: meta
+        run: |
+          echo "registry=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
+          echo "date=$(date -u +%Y%m%d)" >> "$GITHUB_OUTPUT"
+
+      - name: Build
+        run: |
+          sudo podman build \
+            --pull=newer \
+            --build-arg FEDORA_VERSION="${FEDORA_VERSION}" \
+            --build-arg IMAGE_REF="${{ steps.meta.outputs.registry }}/${IMAGE_NAME}" \
+            --label org.opencontainers.image.title="SuperAwesomeMagicalLinux" \
+            --label org.opencontainers.image.description="Fedora ${FEDORA_VERSION}, image-based, with the SuperAwesomeMagical desktop" \
+            --label org.opencontainers.image.source="${{ github.server_url }}/${{ github.repository }}" \
+            --label org.opencontainers.image.version="${FEDORA_VERSION}.${{ steps.meta.outputs.date }}" \
+            --label containers.bootc=1 \
+            --tag "localhost/${IMAGE_NAME}:latest" \
+            --file Containerfile .
+
+      - name: Check the image
+        run: sudo podman run --rm "localhost/${IMAGE_NAME}:latest" /usr/libexec/superawesomemagical/check-image
+
+      - name: Publish
+        if: github.event_name != 'pull_request' && github.ref_name == github.event.repository.default_branch
+        env:
+          REGISTRY: ${{ steps.meta.outputs.registry }}
+          DATE: ${{ steps.meta.outputs.date }}
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | sudo podman login ghcr.io --username "${{ github.actor }}" --password-stdin
+          for tag in latest "${FEDORA_VERSION}" "${FEDORA_VERSION}-${DATE}"; do
+            sudo podman push --compression-format=zstd:chunked \
+              "localhost/${IMAGE_NAME}:latest" "${REGISTRY}/${IMAGE_NAME}:${tag}"
+          done

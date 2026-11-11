@@ -1,0 +1,111 @@
+#!/usr/bin/bash
+# Checks a built SuperAwesomeMagicalLinux image has everything the desktop needs. CI runs it on
+# every build (and `just check` locally); it prints each check and exits non-zero if any fail.
+set -u
+
+failures=0
+pass() { printf '  ok    %s\n' "$1"; }
+fail() { printf '  FAIL  %s\n' "$1"; failures=$((failures + 1)); }
+check() { # description, command...
+    local what=$1
+    shift
+    if "$@" >/dev/null 2>&1; then pass "$what"; else fail "$what"; fi
+}
+
+echo "Programs"
+for cmd in Hyprland start-hyprland hyprctl quickshell caelestia sddm foot fish nautilus firefox \
+    gnome-software hyprpicker grim slurp wl-copy cliphist fuzzel brightnessctl ddcutil; do
+    check "$cmd" command -v "$cmd"
+done
+check "hyprpolkitagent" test -x /usr/libexec/hyprpolkitagent
+
+echo "Libraries for what stage 1 compiled"
+mapfile -t elves < <(python3 -c '
+from pathlib import Path
+paths = [Path("/usr/bin/quickshell"), *Path("/usr/lib64").glob("libcava.so*")]
+for d in ("/usr/lib64/qt6/qml/Caelestia", "/usr/lib64/qt6/qml/M3Shapes", "/usr/lib/caelestia"):
+    paths += [p for p in Path(d).rglob("*") if p.is_file()]
+for p in paths:
+    try:
+        if p.is_file() and not p.is_symlink() and p.open("rb").read(4) == b"\x7fELF":
+            print(p)
+    except OSError:
+        pass
+')
+if [ "${#elves[@]}" -lt 3 ]; then
+    fail "found the compiled files (only ${#elves[@]})"
+else
+    for f in "${elves[@]}"; do
+        missing=$(ldd "$f" 2>/dev/null | grep 'not found' | awk '{print $1}' | tr '\n' ' ')
+        if [ -z "$missing" ]; then pass "$f"; else fail "$f is missing $missing"; fi
+    done
+fi
+
+echo "QML modules the shell imports"
+python3 - <<'EOF'
+import re
+import sys
+from pathlib import Path
+
+shell = Path("/etc/xdg/quickshell/caelestia")
+qml_roots = [Path("/usr/lib64/qt6/qml")]
+imports = set()
+for f in shell.rglob("*.qml"):
+    for m in re.finditer(r'^\s*import\s+([A-Za-z][\w.]*)', f.read_text(errors="replace"), re.M):
+        imports.add(m.group(1))
+missing = []
+for mod in sorted(imports):
+    if mod.startswith("qs.") or mod == "qs":  # the shell's own folders
+        continue
+    if mod.split(".")[0] == "Quickshell":  # built into quickshell itself
+        continue
+    if not any((root / mod.replace(".", "/") / "qmldir").exists() for root in qml_roots):
+        missing.append(mod)
+if not imports:
+    print("  FAIL  found no QML files in", shell)
+    sys.exit(1)
+for mod in missing:
+    print(f"  FAIL  {mod}")
+print(f"  {'ok   ' if not missing else 'FAIL '} {len(imports)} imports, {len(missing)} missing")
+sys.exit(1 if missing else 0)
+EOF
+[ $? -eq 0 ] || failures=$((failures + 1))
+
+echo "Fonts"
+check "sans-serif is Lexend" sh -c 'fc-match -f "%{family}" sans-serif | grep -q "^Lexend"'
+check "monospace is Cascadia Code NF" sh -c 'fc-match -f "%{family}" monospace | grep -q "Cascadia Code NF"'
+check "Material Symbols Rounded installed" sh -c 'fc-list "Material Symbols Rounded" | grep -q .'
+
+echo "Shell and colours"
+check "Caelestia's shell installed" test -f /etc/xdg/quickshell/caelestia/shell.qml
+check "shell defaults to Lexend" grep -raq Lexend /usr/lib64/qt6/qml/Caelestia
+check "CLI and its colour library import" python3 -c 'import caelestia, materialyoucolor'
+for scheme in superawesomemagical harbor evergreen maple lupine aurora driftwood; do
+    check "scheme $scheme offered" sh -c "caelestia scheme list --names 2>/dev/null | grep -qw $scheme"
+done
+
+echo "Hyprland config"
+hypr=/usr/share/superawesomemagical/hypr
+check "entry config" test -f "$hypr/hyprland.lua"
+check "Caelestia's config" test -f "$hypr/caelestia/variables.lua"
+check "polkit agent patched for Fedora" grep -q /usr/libexec/hyprpolkitagent "$hypr/caelestia/hyprland/execs.lua"
+check "start-shell wired up" grep -q superawesomemagical/start-shell "$hypr/caelestia/hyprland/execs.lua"
+check "no Arch-only qtengine" sh -c "! grep -q qtengine '$hypr/caelestia/hyprland/env.lua'"
+check "only our session offered" sh -c 'ls /usr/share/wayland-sessions/ | grep -qx superawesomemagical.desktop && [ "$(ls /usr/share/wayland-sessions/ | wc -l)" -eq 1 ]'
+
+echo "Sign-in and system"
+check "sign-in theme" test -f /usr/share/sddm/themes/superawesomemagical/Main.qml
+check "sign-in theme selected" sh -c 'cat /usr/lib/sddm/sddm.conf.d/*.conf /etc/sddm.conf.d/*.conf 2>/dev/null | grep -q "^Current=superawesomemagical"'
+check "sddm enabled" systemctl is-enabled sddm.service
+check "boots to the desktop" sh -c '[ "$(systemctl get-default)" = graphical.target ]'
+check "GTK defaults compiled" test -f /etc/dconf/db/local
+check "branded" grep -q '^NAME="SuperAwesomeMagicalLinux"' /usr/lib/os-release
+check "Hyprland COPR switched off for installs" sh -c '! grep -q "^enabled=1" /etc/yum.repos.d/_copr:copr.fedorainfracloud.org:lionheartp:Hyprland.repo'
+
+echo
+if [ "$failures" -eq 0 ]; then
+    echo "All checks passed."
+else
+    echo "$failures check(s) failed."
+    exit 1
+fi

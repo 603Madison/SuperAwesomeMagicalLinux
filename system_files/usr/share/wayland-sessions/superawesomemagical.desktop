@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=SuperAwesomeMagical
+Comment=The SuperAwesomeMagical desktop: Caelestia's shell on Hyprland
+Exec=/usr/bin/superawesomemagical-session
+Type=Application
+DesktopNames=Hyprland

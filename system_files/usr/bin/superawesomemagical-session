@@ -1,0 +1,9 @@
+#!/usr/bin/bash
+# Starts the SuperAwesomeMagical desktop for whoever just signed in (the sign-in screen's session).
+#
+# Hyprland reads SuperAwesomeMagicalLinux's config from the system, so it updates with the OS;
+# each person's own changes live in ~/.config/caelestia (see that config's header).
+
+/usr/libexec/superawesomemagical/user-setup || true
+
+exec start-hyprland -- --config /usr/share/superawesomemagical/hypr/hyprland.lua

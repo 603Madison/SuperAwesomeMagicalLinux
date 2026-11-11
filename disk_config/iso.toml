@@ -1,0 +1,27 @@
+# Installer settings for bootc-image-builder's anaconda-iso. The workflow fills in @IMAGE_REF@.
+#
+# Giving our own kickstart keeps the installer interactive (you choose the disk), and the Users
+# module lets you create your account there, since this desktop has no first-run account wizard.
+
+[customizations.installer.kickstart]
+contents = """
+rootpw --lock
+
+%post --erroronfail
+bootc switch --mutate-in-place --transport registry @IMAGE_REF@
+%end
+"""
+
+[customizations.installer.modules]
+enable = [
+  "org.fedoraproject.Anaconda.Modules.Storage",
+  "org.fedoraproject.Anaconda.Modules.Users",
+  "org.fedoraproject.Anaconda.Modules.Timezone",
+  "org.fedoraproject.Anaconda.Modules.Localization",
+]
+disable = [
+  "org.fedoraproject.Anaconda.Modules.Network",
+  "org.fedoraproject.Anaconda.Modules.Security",
+  "org.fedoraproject.Anaconda.Modules.Services",
+  "org.fedoraproject.Anaconda.Modules.Subscription",
+]

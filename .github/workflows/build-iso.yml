@@ -1,0 +1,67 @@
+name: Build installer ISO
+
+# Makes an installer ISO from the published image (let "Build image" publish it first). The ISO carries
+# the whole OS, so it installs offline; installed systems then update from the registry.
+#
+# Run it from the Actions tab. The ISO is attached to the run as an artifact for a few days.
+
+on:
+  workflow_dispatch:
+
+env:
+  IMAGE_NAME: superawesomemagicallinux
+
+jobs:
+  iso:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Make room on the runner
+        run: |
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc /usr/local/.ghcup \
+            /opt/hostedtoolcache /usr/share/swift /usr/local/share/powershell
+          sudo docker image prune --all --force > /dev/null || true
+          df -h /
+
+      - uses: actions/checkout@v4
+
+      - name: Pull the published image
+        id: image
+        run: |
+          ref="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/${IMAGE_NAME}:latest"
+          echo "ref=${ref}" >> "$GITHUB_OUTPUT"
+          echo "${{ secrets.GITHUB_TOKEN }}" | sudo podman login ghcr.io --username "${{ github.actor }}" --password-stdin
+          sudo podman pull "${ref}"
+
+      - name: Build the ISO
+        env:
+          REF: ${{ steps.image.outputs.ref }}
+        run: |
+          mkdir -p output
+          sed "s|@IMAGE_REF@|${REF}|g" disk_config/iso.toml > output/config.toml
+          sudo podman run --rm --privileged --pull=newer \
+            --security-opt label=type:unconfined_t \
+            -v ./output/config.toml:/config.toml:ro \
+            -v ./output:/output \
+            -v /var/lib/containers/storage:/var/lib/containers/storage \
+            quay.io/centos-bootc/bootc-image-builder:latest \
+            --type anaconda-iso \
+            --rootfs btrfs \
+            --use-librepo=True \
+            "${REF}"
+          sudo mv output/bootiso/install.iso "output/SuperAwesomeMagicalLinux-$(date -u +%Y%m%d).iso"
+          sudo chown -R "$(id -u):$(id -g)" output
+          (cd output && sha256sum ./*.iso > SHA256SUMS)
+          ls -lh output
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SuperAwesomeMagicalLinux-iso
+          path: |
+            output/*.iso
+            output/SHA256SUMS
+          retention-days: 3
+          compression-level: 0
