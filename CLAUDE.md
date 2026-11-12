@@ -18,19 +18,38 @@ scheme files from it rather than editing them by hand. The sign-in theme
 (`system_files/usr/share/sddm/themes/superawesomemagical/Main.qml` and its `theme.conf`) repeats the
 dark tokens.
 
+The desktop is ours, not stock Caelestia: nothing a person sees (text, notifications, logos, app
+names) should say Caelestia, and the novelties are gone (no bongo cat, kurukuru or dino). Headings,
+names and buttons are Lexend Bold or DemiBold; body text Medium. The SuperAwesomeMagical mark (two
+ribbons, purple over green, and a sparkle, in a 128 design) is drawn in `shell/components/Logo.qml`,
+`AnimatedLogo.qml`, the hicolor `superawesomemagical.svg` and `build_files/plymouth.py`; change all
+four together. Internal names (the `caelestia` command, `~/.config/caelestia`, QML module names)
+stay, since renaming them buys nothing and breaks people's settings.
+
 The default wallpaper is a public-domain NPS photo (credits beside it); keep any new bundled image
 public domain or CC0/CC BY and credited in `CREDITS.md`.
 
 ## Pins and how to bump them
 
-- Caelestia shell + CLI, Quickshell, M3Shapes, libcava: top of `build_files/caelestia.sh`. Take
-  Quickshell's and M3Shapes' revisions from the new shell release's `flake.lock`.
+- The shell is source in `shell/` (our fork); `shell/UPSTREAM.md` says how to take in an upstream
+  release. Quickshell, M3Shapes, libcava: top of `build_files/deps.sh` (take Quickshell's and
+  M3Shapes' revisions from the upstream shell release's `flake.lock`). The CLI: top of
+  `build_files/shell.sh`, which also patches it (Lexend pickers, our name on notifications, no
+  dotfiles install/update); like the dotfiles patches, they fail loudly if they stop matching.
 - Caelestia dotfiles (Hyprland config): `DOTS_REV` in `build_files/build.sh`, matched to the
   Hyprland version the `lionheartp/Hyprland` COPR ships (its 0.57 takes Lua configs, and the Lua
   API still moves; `check-image` runs Hyprland's own config check, so a mismatch fails CI). `build.sh` patches a few lines of the dotfiles and fails loudly if they
   no longer match; fix the patch list rather than loosening it.
 - Fonts: revisions and SHA-256s at the top of `build.sh`.
 - Fedora version: `FEDORA_VERSION` in the workflow, `Containerfile` and `Justfile`.
+
+## Updates
+
+Installed systems follow `ghcr.io/603madison/superawesomemagicallinux:latest`. The base already
+downloads and stages a new image nightly (`rpm-ostreed-automatic.timer`, policy `stage`) and updates
+Flatpaks; ours adds `superawesomemagical-update` (update now) and a user timer that notifies when an
+update is staged (`update-notify`), plus the About page's button. `check-image` checks they're all
+wired up. The boot splash lives in the initramfs, which `build.sh` regenerates with dracut.
 
 ## Per-user files
 
@@ -77,8 +96,15 @@ admin as already set up and lets the account screens be skipped. The ISO workflo
   `check-image`; `bootc container lint`; Hyprland's own config check, as a non-root user after
   `user-setup` (`useradd -m t; su - t -c "/usr/libexec/superawesomemagical/user-setup;
   XDG_RUNTIME_DIR=/tmp Hyprland --verify-config --config /usr/share/superawesomemagical/hypr/hyprland.lua"`);
-  and the sign-in screen rendered offscreen (`tools/signin-preview.qml`, see `just signin-preview`;
-  Fedora's Qt logs to the journal unless `QT_FORCE_STDERR_LOGGING=1`).
+  the sign-in screen rendered offscreen (`tools/signin-preview.qml`, see `just signin-preview`;
+  Fedora's Qt logs to the journal unless `QT_FORCE_STDERR_LOGGING=1`); and the shell itself,
+  screenshotted under headless sway with lavapipe and a fake Hyprland IPC:
+  ```sh
+  docker run --rm --network host -e https_proxy=$HTTPS_PROXY -e SHOTS="dash:drawers toggle dashboard;lock:lock lock" \
+    -v $PWD/tools/shell-preview:/preview:ro -v $PWD/shell:/etc/xdg/quickshell/caelestia:ro \
+    -v /tmp/shots:/out localhost/superawesomemagicallinux bash /preview/run.sh
+  ```
+  Mounting `shell/` shows QML edits without a rebuild; C++ (config defaults) needs one.
 - The image is ~12 GB unpacked on a ~10 GB base and the sandbox's disk allowance is ~30 GB: delete
   old images and run `docker builder prune -f` between builds, and keep the stage 1 cache.
 

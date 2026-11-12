@@ -9,19 +9,20 @@ rounded cards.
 - **Stable.** The whole OS is one tested image. Updates download in the background and apply on
   the next restart, and if one ever misbehaves the previous version is one command away
   (`sudo bootc rollback`). Apps install from Flathub and update separately.
-- **Fast.** Hyprland and Caelestia's shell are light, and Universal Blue's base brings hardware
+- **Fast.** Hyprland and the desktop shell are light, and Universal Blue's base brings hardware
   video decoding and codecs, so video plays on the GPU instead of the CPU.
-- **Good looking.** [Caelestia](https://github.com/caelestia-dots/shell)'s shell in Lexend and the
-  SuperAwesomeMagical colours (aurora purple and green), a matching sign-in screen, and a photo of
-  the northern lights over Yellowstone for the wallpaper. The original bright blue (Clear Sky) and
-  Weather's themes (Harbor, Evergreen, Maple, Lupine, Aurora, Driftwood) are there to switch to.
+- **Good looking.** Our own desktop shell, in Lexend (bold where it counts) and the
+  SuperAwesomeMagical colours (aurora purple and green), with the SuperAwesomeMagical mark from the
+  boot splash to the lock screen, a matching sign-in screen, and a photo of the northern lights over
+  Yellowstone for the wallpaper. The original bright blue (Clear Sky) and Weather's themes (Harbor,
+  Evergreen, Maple, Lupine, Aurora, Driftwood) are there to switch to.
 
 ## What's in it
 
 | | |
 |---|---|
 | Base | Fedora 45 via [Universal Blue](https://universal-blue.org)'s `base-main` (codecs, firmware, drivers) |
-| Desktop | [Hyprland](https://hypr.land) 0.57 with Caelestia's shell 2.5.0 and its Hyprland config |
+| Desktop | [Hyprland](https://hypr.land) 0.57 with the SuperAwesomeMagical shell (`shell/`, built on Quickshell) |
 | Sign-in | SDDM with our own theme |
 | Apps | Firefox, Files (Nautilus), Text Editor, Image Viewer, foot terminal (fish), mpv, Software (Flathub) |
 | Fonts | Lexend (interface), Cascadia Code Nerd Font (code), Material Symbols (icons) |
@@ -41,13 +42,28 @@ systemctl reboot
 ```
 
 Either way, the system then follows `ghcr.io/603madison/superawesomemagicallinux:latest`, which
-CI rebuilds twice a week (Mondays and Thursdays) with Fedora's latest updates. The image package has
-to be public for installed systems to download updates without signing in to GitHub (Packages →
-superawesomemagicallinux → Package settings).
+CI rebuilds twice a week (Mondays and Thursdays) with Fedora's latest updates, and after every
+change here. The image package has to be public for installed systems to download updates without
+signing in to GitHub (Packages → superawesomemagicallinux → Package settings → Change visibility).
+
+## Updating
+
+Nothing to do: every night the system downloads the newest image in the background and gets it
+ready for the next restart, and Flatpak apps update themselves. When an update is ready, a
+notification says so with a **Restart now** button. To update straight away instead, use **Check
+for updates now** in Settings → About, or from a terminal:
+
+```sh
+superawesomemagical-update            # download now; it takes over at the next restart
+superawesomemagical-update --reboot   # ...and restart into it
+sudo bootc rollback                   # go back to the version before (then restart)
+```
+
+Your settings live in your home folder, so updates bring the new desktop without touching them.
 
 ## Using it
 
-`Super` opens the launcher. Some others (all of Caelestia's keys are in
+`Super` opens the launcher. Some others (all of them are in
 `/usr/share/superawesomemagical/hypr/caelestia/variables.lua`):
 
 | Keys | |
@@ -98,17 +114,22 @@ just qcow2      # a VM disk with an account, then `just vm` to boot it
 
 How it's put together:
 
-- `Containerfile`: two stages. The first compiles Quickshell, Caelestia's shell and CLI and two
-  small libraries against the image's own Qt (`build_files/caelestia.sh`); the second installs
-  Hyprland and the rest and lays our files over the top (`build_files/build.sh`).
+- `Containerfile`: three stages, the first two compiled against the image's own Qt. The first
+  builds what the shell runs on, which rarely changes: Quickshell and two small libraries
+  (`build_files/deps.sh`). The second builds the desktop shell from `shell/` and its command-line
+  helper (`build_files/shell.sh`). The third installs Hyprland and the rest, lays our files over
+  the top and makes the boot splash (`build_files/build.sh`, `build_files/plymouth.py`).
+- `shell/`: the desktop shell, our fork of [Caelestia's](https://github.com/caelestia-dots/shell)
+  (`shell/UPSTREAM.md` says where it came from and how to take in upstream changes).
 - `system_files/`: copied onto the image as-is (sign-in theme, wallpapers, colour schemes,
-  Hyprland entry config, session scripts, font and GTK defaults).
+  Hyprland entry config, session and update scripts, font and GTK defaults).
 - `tools/`: regenerate the abstract wallpapers (`wallpapers.py`) and the colour schemes
-  (`schemes.py`, which holds the brand's colour values).
+  (`schemes.py`, which holds the brand's colour values); screenshot the shell without a GPU
+  (`shell-preview/`, `just shell-preview`).
 
 ## Licence
 
-GPL-3.0, like Caelestia, whose shell and Hyprland config this builds on. Lexend and Material Symbols
+GPL-3.0, like Caelestia's shell and Hyprland config, which ours grew from. Lexend and Material Symbols
 are under the SIL Open Font Licence and Apache 2.0 respectively. The default wallpaper is *Aurora
 borealis, Upper Geyser Basin* by NPS / Neal Herbert, a public-domain photo from Yellowstone National
 Park (see `system_files/usr/share/backgrounds/superawesomemagical/CREDITS.md`).

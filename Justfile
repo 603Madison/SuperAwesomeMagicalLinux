@@ -66,3 +66,14 @@ signin-preview:
             {{image}}:latest sh -c "dnf -q -y install qt6-qtdeclarative-devel >/dev/null && \
             /usr/lib64/qt6/bin/qml /preview/signin-preview.qml -- $state"; \
     done
+
+# Screenshot the desktop shell into ./output/shots, no GPU needed (a headless compositor in the
+# built image). Each shot is name:IPC call; QML edits in shell/ show without a rebuild, C++ ones
+# need `just build`. The lock screen can't be closed again, so keep it last.
+shell-preview shots="dashboard:drawers toggle dashboard;launcher:drawers toggle launcher;sidebar:drawers toggle sidebar;session:drawers toggle session;lock:lock lock":
+    mkdir -p output/shots
+    sudo podman run --rm -e SHOTS="{{shots}}" \
+        -v ./tools/shell-preview:/preview:ro,z \
+        -v ./shell:/etc/xdg/quickshell/caelestia:ro,z \
+        -v ./output/shots:/out:z \
+        {{image}}:latest bash /preview/run.sh
