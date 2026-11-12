@@ -169,6 +169,10 @@ fc-cache -f
 
 # Installed systems don't need the COPR switched on; the image already carries what it built.
 sed -i 's/^enabled=1/enabled=0/' "$HYPR_REPO"
+# bootc-image-builder, which makes the installer ISO, reads repos only from /etc/yum.repos.d, but
+# Fedora 45 keeps its own in /usr/share/dnf5/repos.d. A same-named file in /etc overrides the one
+# in /usr for dnf, so these copies change nothing else.
+cp /usr/share/dnf5/repos.d/*.repo /etc/yum.repos.d/
 # Stage 1's build leftovers that only compiling against libcava needs.
 rm -rf /usr/include/cava /usr/lib64/pkgconfig/libcava.pc
 # /run and /var aren't part of what an installed system takes from the image (bootc container lint
