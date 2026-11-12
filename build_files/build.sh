@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # Stage 2 of the image build: turn Universal Blue's base into SuperAwesomeMagicalLinux.
-# Stage 1 (caelestia.sh) has already put Quickshell and Caelestia's shell and CLI in place.
+# Stage 1 (deps.sh, shell.sh) has already compiled Quickshell and our desktop shell and its CLI.
 set -xeuo pipefail
 
 FILES=/ctx-files
 IMAGE_REF=${IMAGE_REF:-ghcr.io/603madison/superawesomemagicallinux}
 
 # Caelestia's dotfiles (its Hyprland config), at the commit matched to the Hyprland 0.57 the COPR
-# builds; the shell itself is pinned in caelestia.sh.
+# builds.
 DOTS_REV=01d2df329240be60148d25804690779a078c6378
 # Fonts Fedora doesn't package, pinned by commit and checksum.
 LEXEND_REV=c30b221beb0c1da59d563feb91ec8656a1fa972a # google/fonts
@@ -106,6 +106,9 @@ patches = [
      'hl.exec_cmd("/usr/libexec/superawesomemagical/start-shell")'),
     # qtengine is Arch-only; Qt apps follow the light/dark setting through the portal instead.
     ("hyprland/env.lua", 'hl.env("QT_QPA_PLATFORMTHEME", "qtengine")\n', ""),
+    # Tabbed window groups' titles in Lexend, the active one bold.
+    ("hyprland/group.lua", 'font_family               = "JetBrains Mono NF",',
+     'font_family = "Lexend", font_weight_active = "bold", font_weight_inactive = "medium",'),
 ]
 for name, old, new in patches:
     path = root / name
@@ -145,6 +148,7 @@ values = {
     "SUPPORT_URL": "https://github.com/603Madison/SuperAwesomeMagicalLinux/issues",
     "BUG_REPORT_URL": "https://github.com/603Madison/SuperAwesomeMagicalLinux/issues",
     "IMAGE_ID": "superawesomemagicallinux",
+    "LOGO": "superawesomemagical",
     "OSTREE_IMAGE": sys.argv[1],
 }
 for key, value in values.items():
@@ -155,15 +159,29 @@ for key, value in values.items():
 path.write_text(text)
 EOF
 
+# The boot splash: our mark and wordmark in Lexend on slate. Plymouth runs from the initramfs, so
+# that's made again with the theme in it; the base's dracut config already keeps it generic and
+# bootable from an ostree deployment.
+python3 /ctx/plymouth.py /usr/share/plymouth/themes/spinner \
+    /usr/share/plymouth/themes/superawesomemagical "/usr/share/fonts/lexend/Lexend[wght].ttf"
+plymouth-set-default-theme superawesomemagical
+kver=$(ls /usr/lib/modules)
+test "$(echo "$kver" | wc -l)" -eq 1
+DRACUT_NO_XATTR=1 dracut --force --reproducible --kver "$kver" "/usr/lib/modules/$kver/initramfs.img"
+chmod 0600 "/usr/lib/modules/$kver/initramfs.img"
+
 ### System settings ###############################################################################
 
 systemctl enable sddm.service tuned.service tuned-ppd.service
 systemctl set-default graphical.target
+# The "update ready, restart?" notification, for everyone who signs in.
+systemctl --global enable superawesomemagical-update-notify.timer
 # Flathub only (Universal Blue sets it up); Fedora's own Flatpak remote would list most apps twice.
 systemctl disable flatpak-add-fedora-repos.service
 
 dconf update
 fc-cache -f
+gtk-update-icon-cache -f -t /usr/share/icons/hicolor 2>/dev/null || true
 
 ### Tidy up #######################################################################################
 

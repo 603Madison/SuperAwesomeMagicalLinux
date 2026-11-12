@@ -79,4 +79,7 @@ require("hyprland.rules")
 require("hyprland.gestures")
 require("hyprland.keybinds")
 
+-- Hyprland's own messages (config errors and the like) in Lexend too.
+hl.config({ misc = { font_family = "Lexend" } })
+
 load_user("hypr-user")

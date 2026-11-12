@@ -139,13 +139,13 @@ Rectangle {
             anchors.horizontalCenter: parent.horizontalCenter
             text: root.clockText(root.now)
             color: c.ink
-            font { family: root.font; weight: Font.Light; pixelSize: Math.round(root.height * 0.13); letterSpacing: -2 }
+            font { family: root.font; weight: Font.Bold; pixelSize: Math.round(root.height * 0.13); letterSpacing: -3 }
         }
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
             text: Qt.formatDate(root.now, "dddd, MMMM d")
             color: c.inkMuted
-            font { family: root.font; weight: Font.Medium; pixelSize: Math.round(root.height * 0.024) }
+            font { family: root.font; weight: Font.DemiBold; pixelSize: Math.round(root.height * 0.024) }
         }
     }
 
@@ -193,7 +193,7 @@ Rectangle {
                         visible: avatarImage.status !== Image.Ready
                         text: (root.user ? root.user.displayName : "").charAt(0).toUpperCase()
                         color: c.secondary
-                        font { family: root.font; weight: Font.DemiBold; pixelSize: 38 }
+                        font { family: root.font; weight: Font.Bold; pixelSize: 38 }
                     }
                 }
                 Image {
@@ -233,7 +233,7 @@ Rectangle {
                     anchors.verticalCenter: parent.verticalCenter
                     text: root.user ? root.user.displayName : ""
                     color: c.ink
-                    font { family: root.font; weight: Font.DemiBold; pixelSize: 22 }
+                    font { family: root.font; weight: Font.Bold; pixelSize: 22 }
                 }
                 IconButton {
                     visible: users.count > 1
@@ -294,7 +294,7 @@ Rectangle {
                     anchors.centerIn: parent
                     text: root.busy ? "Signing in…" : "Sign in"
                     color: c.primaryInk
-                    font { family: root.font; weight: Font.DemiBold; pixelSize: 16 }
+                    font { family: root.font; weight: Font.Bold; pixelSize: 16 }
                 }
                 MouseArea {
                     id: signInArea

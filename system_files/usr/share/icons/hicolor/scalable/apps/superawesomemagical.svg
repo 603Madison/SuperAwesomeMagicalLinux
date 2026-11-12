@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <!-- The SuperAwesomeMagical mark: an S of two aurora ribbons (purple over green) with a sparkle.
+       The shell draws the same paths in shell/components/Logo.qml. -->
+  <title>SuperAwesomeMagical</title>
+  <path fill="none" stroke="#CFBDFF" stroke-width="17" stroke-linecap="round" d="M88 34 A26 26 0 1 0 62 64"/>
+  <path fill="none" stroke="#6EF2B0" stroke-width="17" stroke-linecap="round" d="M62 64 A26 26 0 1 1 36 94"/>
+  <path fill="#CFBDFF" d="M108 6 C110 18 112 20 124 22 C112 24 110 26 108 38 C106 26 104 24 92 22 C104 20 106 18 108 6 Z"/>
+</svg>

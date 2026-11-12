@@ -1,0 +1,9 @@
+[Unit]
+Description=Check hourly whether a SuperAwesomeMagicalLinux update is ready
+
+[Timer]
+OnStartupSec=5min
+OnUnitInactiveSec=1h
+
+[Install]
+WantedBy=timers.target

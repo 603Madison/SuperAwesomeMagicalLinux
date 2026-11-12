@@ -1,0 +1,35 @@
+#!/usr/bin/bash
+# Tells the signed-in person when a new version of SuperAwesomeMagicalLinux has been downloaded and
+# is waiting for a restart (the system downloads and stages updates by itself every night), with a
+# button to restart into it now. Says so once per version. Run hourly by a user timer.
+set -u
+
+# The staged deployment, if any: "checksum version".
+staged=$(rpm-ostree status --json 2>/dev/null | python3 -c '
+import json, sys
+try:
+    data = json.load(sys.stdin)
+except ValueError:
+    sys.exit(0)
+for d in data.get("deployments", []):
+    if d.get("staged"):
+        print(d.get("checksum", ""), d.get("version") or "")
+        break
+')
+[ -n "$staged" ] || exit 0
+read -r checksum version <<<"$staged"
+
+state=${XDG_STATE_HOME:-$HOME/.local/state}/superawesomemagical/update-notified
+[ "$(cat "$state" 2>/dev/null)" = "$checksum" ] && exit 0
+
+# Waits for an answer; if there's no notification service yet (the shell is still starting), the
+# next run tries again.
+name="SuperAwesomeMagicalLinux${version:+ $version}"
+action=$(notify-send --app-name="SuperAwesomeMagicalLinux" --icon=superawesomemagical \
+    --action=restart="Restart now" --action=later="Later" \
+    "Update ready" "$name is downloaded. Restart when you’re ready to start using it.") || exit 0
+mkdir -p "$(dirname "$state")"
+echo "$checksum" > "$state"
+if [ "$action" = restart ]; then
+    systemctl reboot
+fi

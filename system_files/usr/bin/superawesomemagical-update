@@ -1,0 +1,42 @@
+#!/usr/bin/bash
+# Updates SuperAwesomeMagicalLinux now instead of waiting for the nightly check: downloads the newest
+# version of the OS (it takes over at the next restart, and the current one stays as the fallback)
+# and updates Flatpak apps.
+#
+#   superawesomemagical-update            download and stage; restart whenever suits
+#   superawesomemagical-update --reboot   restart into it straight away
+#   sudo bootc rollback                   go back to the previous version (then restart)
+set -euo pipefail
+
+reboot=false
+case "${1:-}" in
+    --reboot) reboot=true ;;
+    -h | --help)
+        sed -n '2,9p' "$0" | sed 's/^# \{0,1\}//'
+        exit 0
+        ;;
+    "") ;;
+    *)
+        echo "Unknown option: $1 (see --help)" >&2
+        exit 2
+        ;;
+esac
+
+bold=$'\e[1m' plain=$'\e[0m'
+echo "${bold}Checking for a new SuperAwesomeMagicalLinux…${plain}"
+if $reboot; then
+    sudo bootc upgrade --apply
+else
+    sudo bootc upgrade
+fi
+
+echo
+echo "${bold}Updating apps…${plain}"
+flatpak update -y --noninteractive || true
+
+echo
+if sudo bootc status --format json 2>/dev/null | python3 -c 'import json,sys; sys.exit(0 if (json.load(sys.stdin).get("status") or {}).get("staged") else 1)'; then
+    echo "${bold}Done.${plain} The new version starts at your next restart (or run: systemctl reboot)."
+else
+    echo "${bold}You're up to date.${plain}"
+fi

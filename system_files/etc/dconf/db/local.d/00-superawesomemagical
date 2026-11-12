@@ -2,7 +2,7 @@
 # settings (including the ones the shell writes when the colour scheme changes) win over these.
 
 [org/gnome/desktop/interface]
-font-name='Lexend 11'
+font-name='Lexend Medium 11'
 document-font-name='Lexend 11'
 monospace-font-name='Cascadia Code NF 11'
 gtk-theme='adw-gtk3-dark'
@@ -19,3 +19,8 @@ button-layout='appmenu:close'
 [org/gnome/desktop/background]
 picture-uri='file:///usr/share/backgrounds/superawesomemagical/aurora.jpg'
 picture-uri-dark='file:///usr/share/backgrounds/superawesomemagical/aurora.jpg'
+
+# Text Editor writes in Lexend too (code still gets the monospace font in the terminal).
+[org/gnome/TextEditor]
+use-system-font=false
+custom-font='Lexend 12'

@@ -1,0 +1,12 @@
+[Unit]
+Description=Tell me when a SuperAwesomeMagicalLinux update is ready
+# Only in a graphical session, where there's a notification to show.
+After=graphical-session.target
+# Not for the sign-in screen's own account.
+ConditionUser=!@system
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/superawesomemagical/update-notify
+# The notification waits for an answer.
+TimeoutStartSec=infinity

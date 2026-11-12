@@ -77,13 +77,18 @@ check "monospace is Cascadia Code NF" sh -c 'fc-match -f "%{family}" monospace |
 check "Material Symbols Rounded installed" sh -c 'fc-list "Material Symbols Rounded" | grep -q .'
 
 echo "Shell and colours"
-check "Caelestia's shell installed" test -f /etc/xdg/quickshell/caelestia/shell.qml
+check "desktop shell installed" test -f /etc/xdg/quickshell/caelestia/shell.qml
 check "shell defaults to Lexend" python3 -c '
 import sys
 data = open("/usr/lib64/qt6/qml/Caelestia/lib/libcaelestia-config.so", "rb").read()
 utf16 = lambda s: s.encode("utf-16-le")  # how Qt string literals are stored
 sys.exit(not (utf16("Lexend") in data and utf16("GoogleSansFlex") not in data))'
 check "CLI and its colour library import" python3 -c 'import caelestia, materialyoucolor'
+check "CLI won't install Arch dotfiles over the desktop" sh -c 'caelestia update --noconfirm 2>&1 | grep -q superawesomemagical-update'
+check "clipboard and emoji pickers in Lexend" python3 -c '
+import caelestia, pathlib, sys
+t = (pathlib.Path(caelestia.__file__).parent / "data/templates/fuzzel.ini").read_text()
+sys.exit("font=Lexend" not in t)'
 for scheme in superawesomemagical clearsky harbor evergreen maple lupine aurora driftwood; do
     check "scheme $scheme offered" sh -c "caelestia scheme list --names 2>/dev/null | grep -qw $scheme"
 done
@@ -91,9 +96,10 @@ done
 echo "Hyprland config"
 hypr=/usr/share/superawesomemagical/hypr
 check "entry config" test -f "$hypr/hyprland.lua"
-check "Caelestia's config" test -f "$hypr/caelestia/variables.lua"
+check "base config" test -f "$hypr/caelestia/variables.lua"
 check "polkit agent patched for Fedora" grep -q /usr/libexec/hyprpolkitagent "$hypr/caelestia/hyprland/execs.lua"
 check "start-shell wired up" grep -q superawesomemagical/start-shell "$hypr/caelestia/hyprland/execs.lua"
+check "window groups in Lexend" grep -q 'font_family = "Lexend"' "$hypr/caelestia/hyprland/group.lua"
 check "no Arch-only qtengine" sh -c "! grep -q qtengine '$hypr/caelestia/hyprland/env.lua'"
 check "only our session offered" sh -c 'ls /usr/share/wayland-sessions/ | grep -qx superawesomemagical.desktop && [ "$(ls /usr/share/wayland-sessions/ | wc -l)" -eq 1 ]'
 
@@ -120,6 +126,17 @@ check "sddm enabled" systemctl is-enabled sddm.service
 check "boots to the desktop" sh -c '[ "$(systemctl get-default)" = graphical.target ]'
 check "GTK defaults compiled" test -f /etc/dconf/db/local
 check "branded" grep -q '^NAME="SuperAwesomeMagicalLinux"' /usr/lib/os-release
+check "boot splash selected" sh -c '[ "$(plymouth-set-default-theme)" = superawesomemagical ]'
+initramfs=$(ls /usr/lib/modules/*/initramfs.img 2>/dev/null | head -1)
+check "boot splash in the initramfs" sh -c "lsinitrd '$initramfs' | grep -q 'plymouth/themes/superawesomemagical/watermark.png'"
+check "initramfs boots an ostree deployment" sh -c "lsinitrd -m '$initramfs' | grep -qx ostree"
+
+echo "Updates"
+check "updates download nightly" systemctl is-enabled rpm-ostreed-automatic.timer
+check "and are staged for the next restart" grep -q '^AutomaticUpdatePolicy=stage' /etc/rpm-ostreed.conf
+check "Flatpak apps update too" systemctl is-enabled flatpak-system-update.timer
+check "\"update ready\" notification" systemctl --global is-enabled superawesomemagical-update-notify.timer
+check "update command" test -x /usr/bin/superawesomemagical-update
 check "Fedora's repos where the ISO builder looks" test -f /etc/yum.repos.d/fedora.repo -a -f /etc/yum.repos.d/fedora-updates.repo
 check "Hyprland COPR switched off for installs" sh -c 'f=$(grep -l lionheartp/Hyprland /etc/yum.repos.d/*.repo) && ! grep -q "^enabled=1" $f'
 
