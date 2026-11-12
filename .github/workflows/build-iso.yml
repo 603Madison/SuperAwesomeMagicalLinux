@@ -81,7 +81,33 @@ jobs:
             --use-librepo=True \
             "${REF}"
           iso="SuperAwesomeMagicalLinux-${VERSION:-$(date -u +%Y%m%d)}.iso"
-          sudo mv output/bootiso/install.iso "output/${iso}"
+
+          # Our look for the installer (disk_config/installer/branding.py), made in the image itself
+          # (it has Pillow and Lexend), added as /images/product.img by mkksiso, Fedora's own tool for
+          # adding files to an installer ISO: it replays the ISO's boot records as they are. If they
+          # don't come out the same (bar positions), the unbranded ISO is kept, so an install always
+          # boots. (The disc label stays bootc-image-builder's: changing it means rewriting the EFI
+          # boot image, which can't be tried out without booting it.)
+          mkdir -p output/add/images
+          sudo podman run --rm -v ./build_files:/b:ro -v ./disk_config/installer:/i:ro -v ./output/add/images:/o \
+            "${REF}" python3 /i/branding.py /b "/usr/share/fonts/lexend/Lexend[wght].ttf" /o/product.img
+          if sudo podman run --rm -v ./output:/o "${REF}" bash -c '
+            set -euo pipefail
+            dnf -y -q install lorax >/dev/null
+            mkksiso --skip-mkefiboot --add /o/add/images /o/bootiso/install.iso /o/branded.iso
+            boot() { # the boot records, without where on the disc they are
+              xorriso -indev "$1" -report_el_torito plain -report_system_area plain 2>/dev/null |
+                grep -E "^El Torito (boot img|img (path|opts))|^System area (options|summary)" |
+                sed -E "s/^(El Torito boot img .*[^ ]) +[0-9]+$/\1/"
+            }
+            diff <(boot /o/bootiso/install.iso) <(boot /o/branded.iso)'
+          then
+            sudo mv output/branded.iso "output/${iso}"
+          else
+            echo "::warning::Adding the installer's look changed the ISO's boot records; publishing it without"
+            sudo mv output/bootiso/install.iso "output/${iso}"
+          fi
+          sudo rm -rf output/bootiso output/add output/branded.iso
           sudo chown -R "$(id -u):$(id -g)" output
           (cd output && sha256sum "${iso}" > SHA256SUMS)
           echo "ISO=${iso}" >> "$GITHUB_ENV"
@@ -98,6 +124,11 @@ jobs:
           command -v xorriso >/dev/null || { sudo apt-get update -qq && sudo apt-get install -y -qq xorriso; }
           file "${iso}" | tee /dev/stderr | grep -q "ISO 9660"
           xorriso -indev "${iso}" -report_el_torito plain 2>/dev/null | tee /dev/stderr | grep -qi "uefi\|efi"
+          if xorriso -indev "${iso}" -ls /images/product.img 2>/dev/null | grep -q product.img; then
+            echo "The installer has our look (images/product.img)."
+          else
+            echo "::warning::The installer has Fedora's look this time (no images/product.img)."
+          fi
           {
             echo "### ${ISO}"
             echo
