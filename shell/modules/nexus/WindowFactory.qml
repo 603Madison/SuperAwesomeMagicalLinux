@@ -25,6 +25,9 @@ Singleton {
         FloatingWindow {
             id: win
 
+            // The page to open on, by index into PageRegistry.pages.
+            property int startPage
+
             color: Colours.tPalette.m3surface
             surfaceFormat.opaque: false
 
@@ -42,7 +45,7 @@ Singleton {
             contentItem.Config.screen: screen.name
             contentItem.Tokens.screen: screen.name
 
-            title: Tr.tr("Nexus — %1").arg(PageRegistry.pages[nexus.nState.currentPageIdx].label)
+            title: Tr.tr("Settings — %1").arg(PageRegistry.pages[nexus.nState.currentPageIdx].label)
 
             Nexus {
                 id: nexus
@@ -50,6 +53,7 @@ Singleton {
                 anchors.fill: parent
                 nState.screen: win.screen
                 nState.isWindow: true
+                nState.currentPageIdx: win.startPage
                 onClose: win.destroy()
             }
 

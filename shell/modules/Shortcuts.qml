@@ -140,6 +140,13 @@ Scope {
             WindowFactory.create();
         }
 
+        // Settings open on one page, by its id in PageRegistry (e.g. "updates").
+        function openPage(page: string): void {
+            WindowFactory.create(null, {
+                startPage: Math.max(0, PageRegistry.pages.findIndex(p => p.id === page))
+            });
+        }
+
         target: "nexus"
     }
 

@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Layouts
-import Quickshell
 import Quickshell.Io
 import Caelestia
 import Caelestia.Config
@@ -33,16 +32,12 @@ PageBase {
             }
         }
 
-        // The desktop tools' version, from their package listing; the sh wrapper avoids a
-        // warning when they aren't installed
+        // The desktop tools' version, from their Python package's metadata
         Process {
             running: true
-            command: ["sh", "-c", "caelestia --version 2>/dev/null"]
+            command: ["python3", "-c", "import importlib.metadata as m; print(m.version('caelestia'))"]
             stdout: StdioCollector {
-                onStreamFinished: {
-                    const m = text.match(/caelestia-cli\S*\s+(\d+(?:\.\d+)*)/);
-                    root.cliVersion = m ? m[1] : "";
-                }
+                onStreamFinished: root.cliVersion = text.trim()
             }
         }
 
@@ -140,29 +135,6 @@ PageBase {
             last: true
             label: "Qt"
             value: CUtils.qtVersion || "…"
-        }
-
-        // Updates: the system downloads them by itself each night and they take over at the next
-        // restart (with the previous version kept to fall back to); this just does it now.
-        SectionHeader {
-            text: Tr.tr("Updates")
-        }
-
-        InfoRow {
-            first: true
-            icon: "nightlight"
-            label: Tr.tr("Automatic updates")
-            value: Tr.tr("Every night")
-        }
-
-        RowButton {
-            last: true
-            icon: "system_update_alt"
-            text: Tr.tr("Check for updates now")
-            subtext: Tr.tr("Opens a terminal, which asks for your password")
-            trailingIcon: "open_in_new"
-            onClicked: Quickshell.execDetached(["foot", "--title", "Update SuperAwesomeMagicalLinux", "sh", "-c",
-                "superawesomemagical-update; echo; read -rp 'Press Enter to close. ' _"])
         }
     }
 }

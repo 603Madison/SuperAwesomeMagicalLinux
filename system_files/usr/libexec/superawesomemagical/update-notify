@@ -25,11 +25,12 @@ state=${XDG_STATE_HOME:-$HOME/.local/state}/superawesomemagical/update-notified
 # Waits for an answer; if there's no notification service yet (the shell is still starting), the
 # next run tries again.
 name="SuperAwesomeMagicalLinux${version:+ $version}"
-action=$(notify-send --app-name="SuperAwesomeMagicalLinux" --icon=superawesomemagical \
-    --action=restart="Restart now" --action=later="Later" \
+action=$(notify-send --app-name="SuperAwesomeMagical" --icon=superawesomemagical \
+    --action=default="Open Updates" --action=restart="Restart now" --action=later="Later" \
     "Update ready" "$name is downloaded. Restart when you’re ready to start using it.") || exit 0
 mkdir -p "$(dirname "$state")"
 echo "$checksum" > "$state"
-if [ "$action" = restart ]; then
-    systemctl reboot
-fi
+case $action in
+    restart) systemctl reboot ;;
+    default) qs -c caelestia ipc call nexus openPage updates ;; # clicked: Settings → Updates
+esac
