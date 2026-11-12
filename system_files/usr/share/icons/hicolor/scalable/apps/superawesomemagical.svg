@@ -1,8 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
-  <!-- The SuperAwesomeMagical mark: an S of two aurora ribbons (purple over green) with a sparkle.
-       The shell draws the same paths in shell/components/Logo.qml. -->
+  <!-- The SuperAwesomeMagical mark: a big four-point sparkle fading from the aurora's purple into
+       its green, with a small green sparkle beside it. The shell draws the same paths in
+       shell/components/Logo.qml, and build_files/plymouth.py for the boot splash. -->
   <title>SuperAwesomeMagical</title>
-  <path fill="none" stroke="#CFBDFF" stroke-width="17" stroke-linecap="round" d="M88 34 A26 26 0 1 0 62 64"/>
-  <path fill="none" stroke="#6EF2B0" stroke-width="17" stroke-linecap="round" d="M62 64 A26 26 0 1 1 36 94"/>
-  <path fill="#CFBDFF" d="M108 6 C110 18 112 20 124 22 C112 24 110 26 108 38 C106 26 104 24 92 22 C104 20 106 18 108 6 Z"/>
+  <defs>
+    <linearGradient id="aurora" gradientUnits="userSpaceOnUse" x1="0" y1="12" x2="0" y2="124">
+      <stop offset="0" stop-color="#CFBDFF"/>
+      <stop offset="0.55" stop-color="#9F8CFF"/>
+      <stop offset="1" stop-color="#6EF2B0"/>
+    </linearGradient>
+  </defs>
+  <path fill="url(#aurora)" d="M56 12 C61 56 72 67 116 72 C72 77 61 88 56 124 C51 88 40 77 4 72 C40 67 51 56 56 12 Z"/>
+  <path fill="#6EF2B0" d="M106 4 C108 17 111 20 124 22 C111 24 108 27 106 40 C104 27 101 24 88 22 C101 20 104 17 106 4 Z"/>
 </svg>

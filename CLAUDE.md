@@ -20,10 +20,11 @@ dark tokens.
 
 The desktop is ours, not stock Caelestia: nothing a person sees (text, notifications, logos, app
 names) should say Caelestia, and the novelties are gone (no bongo cat, kurukuru or dino). Headings,
-names and buttons are Lexend Bold or DemiBold; body text Medium. The SuperAwesomeMagical mark (two
-ribbons, purple over green, and a sparkle, in a 128 design) is drawn in `shell/components/Logo.qml`,
-`AnimatedLogo.qml`, the hicolor `superawesomemagical.svg` and `build_files/plymouth.py`; change all
-four together. Internal names (the `caelestia` command, `~/.config/caelestia`, QML module names)
+names and buttons are Lexend Bold or DemiBold; body text Medium. The SuperAwesomeMagical mark (twin
+sparkles: a big four-point one fading from purple into green, a small green one beside it, in a 128
+design; the owner's pick) is drawn in `shell/components/Logo.qml` (`AnimatedLogo.qml` animates it),
+the hicolor `superawesomemagical.svg` and `build_files/plymouth.py`; change them together, then
+redraw fastfetch's copy with `tools/fastfetch-logo.py`. Internal names (the `caelestia` command, `~/.config/caelestia`, QML module names)
 stay, since renaming them buys nothing and breaks people's settings.
 
 The default wallpaper is a public-domain NPS photo (credits beside it); keep any new bundled image

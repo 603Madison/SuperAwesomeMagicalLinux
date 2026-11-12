@@ -1,5 +1,5 @@
-"""Makes SuperAwesomeMagicalLinux's boot splash: Fedora's spinner theme with our mark and wordmark
-in Lexend Bold over the slate background, and the spinner in aurora purple.
+"""Makes SuperAwesomeMagicalLinux's boot splash: Fedora's spinner theme with our mark (the twin
+sparkles) and wordmark in Lexend Bold over the slate background, and the spinner in aurora purple.
 
     python3 plymouth.py <spinner theme dir> <new theme dir> <Lexend variable font>
 """
@@ -16,28 +16,13 @@ SPINNER, THEME, LEXEND = (Path(a) for a in sys.argv[1:4])
 BACKGROUND = "0x0B1220"  # the slate neutral
 PRIMARY = (0xCF, 0xBD, 0xFF)  # aurora purple
 SECONDARY = (0x6E, 0xF2, 0xB0)  # aurora green
+MID = (0x9F, 0x8C, 0xFF)  # the deeper violet partway down the big sparkle
 INK = (0xE6, 0xE9, 0xF2)
 
 SS = 4  # supersampling for smooth edges
 
 
-def arc_points(x1, y1, r, large, sweep, x2, y2, n=240):
-    """Points along an SVG arc (circular, no rotation), per the SVG spec's centre parametrisation."""
-    dx, dy = (x1 - x2) / 2, (y1 - y2) / 2
-    sign = -1 if large == sweep else 1
-    k = sign * math.sqrt(max(r * r - dx * dx - dy * dy, 0) / (dx * dx + dy * dy))
-    cx, cy = k * dy + (x1 + x2) / 2, -k * dx + (y1 + y2) / 2
-    a1 = math.atan2(y1 - cy, x1 - cx)
-    a2 = math.atan2(y2 - cy, x2 - cx)
-    delta = a2 - a1
-    if sweep and delta < 0:
-        delta += 2 * math.pi
-    elif not sweep and delta > 0:
-        delta -= 2 * math.pi
-    return [(cx + r * math.cos(a1 + delta * i / n), cy + r * math.sin(a1 + delta * i / n)) for i in range(n + 1)]
-
-
-def bezier_points(p0, p1, p2, p3, n=40):
+def bezier_points(p0, p1, p2, p3, n=48):
     out = []
     for i in range(n + 1):
         t = i / n
@@ -46,27 +31,45 @@ def bezier_points(p0, p1, p2, p3, n=40):
     return out
 
 
+def path_points(d: str) -> list:
+    """Points along an SVG path made only of M, C and Z (how the mark's sparkles are written)."""
+    nums = [float(v) for v in d.replace("M", " ").replace("C", " ").replace("Z", " ").split()]
+    start, rest = tuple(nums[:2]), nums[2:]
+    pts, cur = [start], start
+    for i in range(0, len(rest), 6):
+        c1, c2, end = tuple(rest[i:i + 2]), tuple(rest[i + 2:i + 4]), tuple(rest[i + 4:i + 6])
+        pts += bezier_points(cur, c1, c2, end)[1:]
+        cur = end
+    return pts
+
+
+# The same paths as components/Logo.qml and the hicolor superawesomemagical.svg.
+BIG = "M56 12 C61 56 72 67 116 72 C72 77 61 88 56 124 C51 88 40 77 4 72 C40 67 51 56 56 12 Z"
+SMALL = "M106 4 C108 17 111 20 124 22 C111 24 108 27 106 40 C104 27 101 24 88 22 C101 20 104 17 106 4 Z"
+
+
+def lerp(c1, c2, t):
+    return tuple(round(a + (b - a) * t) for a, b in zip(c1, c2))
+
+
 def logo(size: int) -> Image.Image:
-    """The mark from components/Logo.qml (a 128 x 128 design), at size x size."""
+    """The mark from components/Logo.qml (a 128 x 128 design), at size x size: the big sparkle in
+    a purple-to-green gradient, the small one in green."""
     s = size * SS / 128
-    img = Image.new("RGBA", (size * SS, size * SS), (0, 0, 0, 0))
-    draw = ImageDraw.Draw(img)
-    radius = 17 / 2 * s
-    for points, colour in (
-        (arc_points(88, 34, 26, 1, 0, 62, 64), PRIMARY),
-        (arc_points(62, 64, 26, 1, 1, 36, 94), SECONDARY),
-    ):
-        for x, y in points:  # a round-capped stroke: a disc at every step along the arc
-            draw.ellipse((x * s - radius, y * s - radius, x * s + radius, y * s + radius), fill=colour)
-    sparkle = []
-    for seg in (
-        ((108, 6), (110, 18), (112, 20), (124, 22)),
-        ((124, 22), (112, 24), (110, 26), (108, 38)),
-        ((108, 38), (106, 26), (104, 24), (92, 22)),
-        ((92, 22), (104, 20), (106, 18), (108, 6)),
-    ):
-        sparkle += bezier_points(*seg)
-    draw.polygon([(x * s, y * s) for x, y in sparkle], fill=PRIMARY)
+    full = size * SS
+    # The big sparkle's vertical gradient: purple, a deeper violet at 0.55, green, from y 12 to 124.
+    gradient = Image.new("RGBA", (1, full))
+    for y in range(full):
+        t = min(max((y / s - 12) / 112, 0), 1)
+        colour = lerp(PRIMARY, MID, t / 0.55) if t < 0.55 else lerp(MID, SECONDARY, (t - 0.55) / 0.45)
+        gradient.putpixel((0, y), colour + (255,))
+    gradient = gradient.resize((full, full))
+
+    img = Image.new("RGBA", (full, full), (0, 0, 0, 0))
+    mask = Image.new("L", (full, full), 0)
+    ImageDraw.Draw(mask).polygon([(x * s, y * s) for x, y in path_points(BIG)], fill=255)
+    img.paste(gradient, (0, 0), mask)
+    ImageDraw.Draw(img).polygon([(x * s, y * s) for x, y in path_points(SMALL)], fill=SECONDARY)
     return img.resize((size, size), Image.LANCZOS)
 
 
@@ -92,7 +95,7 @@ def wordmark(px: int) -> Image.Image:
 
 
 def watermark() -> Image.Image:
-    mark, words = logo(104), wordmark(30)
+    mark, words = logo(132), wordmark(30)
     gap = 22
     img = Image.new("RGBA", (max(mark.width, words.width), mark.height + gap + words.height), (0, 0, 0, 0))
     img.alpha_composite(mark, ((img.width - mark.width) // 2, 0))
