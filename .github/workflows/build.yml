@@ -1,11 +1,10 @@
 name: Build image
 
 # Builds the OS image and, on the default branch, publishes it to GitHub's container registry.
-# Installed systems update from there, so the scheduled rebuild is how Fedora's and Universal Blue's
-# fixes reach them. Other branches and pull requests only build and check.
-#
-# Twice a week, because the repo is private and a build takes ~25 of the plan's Actions minutes;
-# make it daily ("17 7 * * *") if minutes allow, or if the repo goes public (then they're free).
+# Installed systems update from there, so the daily rebuild is how Fedora's and Universal Blue's
+# fixes reach them, and follow-apps.yml starts one when one of the family's apps (SuperAwesomeMagical
+# Browser, whose releases carry Firefox's security fixes, Music or Email) has a new release. Other
+# branches and pull requests only build and check.
 
 on:
   push:
@@ -13,7 +12,7 @@ on:
   pull_request:
     paths-ignore: ["**.md", "tools/**"]
   schedule:
-    - cron: "17 7 * * 1,4"
+    - cron: "17 7 * * *"
   workflow_dispatch:
 
 concurrency:
@@ -46,6 +45,13 @@ jobs:
         run: |
           echo "registry=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
           echo "date=$(date -u +%Y%m%d)" >> "$GITHUB_OUTPUT"
+          # The family's apps' newest releases, built in and labelled on the image (follow-apps.yml
+          # compares the labels with the newest releases). Email may have none yet.
+          for app in Browser Music Email; do
+            tag=$(build_files/newest-release.sh "603Madison/SuperAwesomeMagical$app")
+            echo "${app,,}=$tag" >> "$GITHUB_OUTPUT"
+            echo "SuperAwesomeMagical$app: ${tag:-no release yet}"
+          done
 
       - name: Build
         run: |
@@ -53,10 +59,16 @@ jobs:
             --pull=newer \
             --build-arg FEDORA_VERSION="${FEDORA_VERSION}" \
             --build-arg IMAGE_REF="${{ steps.meta.outputs.registry }}/${IMAGE_NAME}" \
+            --build-arg BROWSER_TAG="${{ steps.meta.outputs.browser }}" \
+            --build-arg MUSIC_TAG="${{ steps.meta.outputs.music }}" \
+            --build-arg EMAIL_TAG="${{ steps.meta.outputs.email }}" \
             --label org.opencontainers.image.title="SuperAwesomeMagicalLinux" \
             --label org.opencontainers.image.description="Fedora ${FEDORA_VERSION}, image-based, with the SuperAwesomeMagical desktop" \
             --label org.opencontainers.image.source="${{ github.server_url }}/${{ github.repository }}" \
-            --label org.opencontainers.image.version="${FEDORA_VERSION}.${{ steps.meta.outputs.date }}" \
+            --label org.opencontainers.image.version="${FEDORA_VERSION}.${{ steps.meta.outputs.date }}.${{ github.run_number }}" \
+            --label io.github.603madison.superawesomemagicalbrowser="${{ steps.meta.outputs.browser }}" \
+            --label io.github.603madison.superawesomemagicalmusic="${{ steps.meta.outputs.music }}" \
+            --label io.github.603madison.superawesomemagicalemail="${{ steps.meta.outputs.email }}" \
             --label containers.bootc=1 \
             --tag "localhost/${IMAGE_NAME}:latest" \
             --file Containerfile .

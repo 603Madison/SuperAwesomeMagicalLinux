@@ -17,6 +17,14 @@ SYMBOLS_SHA256=7e74e36533ccee12c2b81e75bfcf3ccf123d3bb7e7e46d65d94445f23db0c97c
 
 HYPR_COPR=lionheartp/Hyprland
 
+# The family's apps (SuperAwesomeMagical Browser, Music and Email): a release tag each, or empty for
+# the newest. CI passes the newest explicitly and labels the image with them;
+# .github/workflows/follow-apps.yml rebuilds when any has a newer one (the browser's carry Firefox's
+# security fixes).
+BROWSER_TAG=${BROWSER_TAG:-}
+MUSIC_TAG=${MUSIC_TAG:-}
+EMAIL_TAG=${EMAIL_TAG:-}
+
 ### Repositories ##################################################################################
 
 # Fedora dropped Hyprland in 2025; this COPR keeps it (and its companion tools) built for current
@@ -46,7 +54,7 @@ packages=(
     grim slurp swappy wl-clipboard cliphist fuzzel libnotify dconf trash-cli
     gnome-keyring xdg-user-dirs xdg-utils
 
-    # Apps
+    # Apps (and the family's own, below: the browser, Music and Email)
     foot fish nautilus gvfs gvfs-mtp file-roller gnome-text-editor loupe mpv pavucontrol
     gnome-software fastfetch btop eza zoxide
 
@@ -54,6 +62,48 @@ packages=(
     papirus-icon-theme adw-gtk3-theme adwaita-cursor-theme cascadia-code-nf-fonts
 )
 dnf -y install --setopt=install_weak_deps=False "${packages[@]}"
+
+### The family's apps ##############################################################################
+
+# Each from its GitHub release: checked against the release's SHA256SUMS where it has one, and
+# against rpm's own digests always.
+install_release_rpm() { # owner/repo tag asset
+    local dir=/tmp/apps/$2
+    install -d "$dir"
+    curl -fsSL --retry 5 -o "$dir/$3" "https://github.com/$1/releases/download/$2/$3"
+    if curl -fsSL --retry 5 -o "$dir/SHA256SUMS" "https://github.com/$1/releases/download/$2/SHA256SUMS"; then
+        (cd "$dir" && sha256sum --check --ignore-missing --strict SHA256SUMS)
+    fi
+    rpm --checksig --nosignature "$dir/$3"
+    dnf -y install --setopt=install_weak_deps=False "$dir/$3"
+}
+
+# SuperAwesomeMagical Browser (Firefox in the family's look), in place of Fedora's Firefox.
+BROWSER_TAG=${BROWSER_TAG:-$(/ctx/newest-release.sh 603Madison/SuperAwesomeMagicalBrowser)}
+test -n "$BROWSER_TAG"
+dnf -y remove firefox firefox-langpacks
+install_release_rpm 603Madison/SuperAwesomeMagicalBrowser "$BROWSER_TAG" \
+    "superawesomemagicalbrowser-${BROWSER_TAG#v}.x86_64.rpm"
+
+# The Music and Email apps are built on Ubuntu 24.04, so they link OpenSSL 3; Fedora 45's own is
+# OpenSSL 4, and its OpenSSL 3 libraries come separately.
+dnf -y install --setopt=install_weak_deps=False openssl3-libs
+
+# SuperAwesomeMagicalMusic, the desktop app for the Music server.
+MUSIC_TAG=${MUSIC_TAG:-$(/ctx/newest-release.sh 603Madison/SuperAwesomeMagicalMusic)}
+test -n "$MUSIC_TAG"
+install_release_rpm 603Madison/SuperAwesomeMagicalMusic "$MUSIC_TAG" \
+    "SuperAwesomeMagicalMusic-Desktop-$MUSIC_TAG-x86_64.rpm"
+
+# SuperAwesomeMagicalEmail, once it has a release (the image picks up its first one by itself).
+EMAIL_TAG=${EMAIL_TAG:-$(/ctx/newest-release.sh 603Madison/SuperAwesomeMagicalEmail)}
+if [ -n "$EMAIL_TAG" ]; then
+    install_release_rpm 603Madison/SuperAwesomeMagicalEmail "$EMAIL_TAG" \
+        "SuperAwesomeMagicalEmail-Desktop-$EMAIL_TAG-x86_64.rpm"
+else
+    echo "SuperAwesomeMagicalEmail has no release yet; leaving it out."
+fi
+rm -rf /tmp/apps
 
 ### Fonts: Lexend (the brand's typeface) and Material Symbols (the shell's icons) #################
 

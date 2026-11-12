@@ -13,7 +13,7 @@ check() { # description, command...
 }
 
 echo "Programs"
-for cmd in Hyprland start-hyprland hyprctl quickshell caelestia sddm foot fish nautilus firefox \
+for cmd in Hyprland start-hyprland hyprctl quickshell caelestia sddm foot fish nautilus superawesomemagicalbrowser \
     gnome-software hyprpicker grim slurp wl-copy cliphist fuzzel brightnessctl ddcutil; do
     check "$cmd" command -v "$cmd"
 done
@@ -118,6 +118,24 @@ if [ -e /run/.containerenv ] || [ -e /.dockerenv ]; then
     else
         fail "couldn't make an account to check the Hyprland config with"
     fi
+fi
+
+echo "The family's apps"
+default_for() { XDG_CONFIG_HOME=/nonexistent XDG_DATA_HOME=/nonexistent xdg-mime query default "$1"; }
+libs_resolve() { ! ldd "$1" | grep -q "not found"; }
+check "SuperAwesomeMagical Browser instead of Firefox" sh -c '! rpm -q firefox >/dev/null && rpm -q superawesomemagicalbrowser'
+check "browser starts" sh -c 'HOME=$(mktemp -d) superawesomemagicalbrowser --version | grep -q "Mozilla Firefox"'
+for t in x-scheme-handler/https text/html application/pdf; do
+    check "browser opens $t" test "$(default_for $t)" = io.github._603madison.SuperAwesomeMagicalBrowser.desktop
+done
+check "Super+W opens the browser" grep -q '"superawesomemagicalbrowser"' "$hypr/hyprland.lua"
+check "Music app installed" rpm -q superawesomemagicalmusic
+check "Music app's libraries resolve" libs_resolve /usr/bin/superawesomemagicalmusic
+if rpm -q superawesomemagicalemail >/dev/null 2>&1; then
+    check "Email app's libraries resolve" libs_resolve /usr/bin/superawesomemagicalemail
+    check "Email app opens mail links" test "$(default_for x-scheme-handler/mailto)" = io.github._603madison.SuperAwesomeMagicalEmail.desktop
+else
+    printf '  skip  %s\n' "Email app (no release of it yet)"
 fi
 
 echo "Sign-in and system"

@@ -1,0 +1,9 @@
+# SuperAwesomeMagicalLinux's default apps. Your own choices (an app's "Make default", or
+# ~/.config/mimeapps.list) win over these.
+[Default Applications]
+text/html=io.github._603madison.SuperAwesomeMagicalBrowser.desktop
+application/xhtml+xml=io.github._603madison.SuperAwesomeMagicalBrowser.desktop
+x-scheme-handler/http=io.github._603madison.SuperAwesomeMagicalBrowser.desktop
+x-scheme-handler/https=io.github._603madison.SuperAwesomeMagicalBrowser.desktop
+application/pdf=io.github._603madison.SuperAwesomeMagicalBrowser.desktop
+x-scheme-handler/mailto=io.github._603madison.SuperAwesomeMagicalEmail.desktop

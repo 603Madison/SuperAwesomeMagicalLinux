@@ -1,0 +1,55 @@
+name: Follow the apps
+
+# The image carries the family's own apps from their GitHub releases: SuperAwesomeMagical Browser
+# (Firefox, so its releases carry Firefox's security fixes; its CI releases within hours of
+# Mozilla), Music and Email. Every three hours this compares each one's newest release with the one
+# the published image was built with (the image's io.github.603madison.<app> labels) and, when the
+# image is behind, starts "Build image", which publishes; the installer ISO follows on its own.
+# Installed systems then pick it up with their nightly update.
+
+on:
+  schedule:
+    - cron: "41 */3 * * *"
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compare the newest releases with the published image's
+        env:
+          GH_TOKEN: ${{ github.token }}
+          IMAGE: docker://ghcr.io/${{ github.repository_owner }}/superawesomemagicallinux:latest
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          command -v skopeo >/dev/null || { sudo apt-get update -q && sudo apt-get install -y -q skopeo; }
+          labels=$(skopeo inspect --no-tags "${IMAGE,,}" | jq '.Labels')
+          behind=()
+          for app in Browser Music Email; do
+            repo="SuperAwesomeMagical$app"
+            newest=$(build_files/newest-release.sh "603Madison/$repo")
+            have=$(jq -r --arg k "io.github.603madison.${repo,,}" '.[$k] // ""' <<<"$labels")
+            echo "$repo: newest ${newest:-none}, in the published image ${have:-none}"
+            [ "$newest" = "$have" ] || behind+=("$repo ${newest:-none}")
+          done
+          if [ ${#behind[@]} -eq 0 ]; then
+            echo "Up to date."
+            exit 0
+          fi
+          busy=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow build.yml --branch "$DEFAULT_BRANCH" \
+            --json status --jq '[.[] | select(.status != "completed")] | length')
+          if [ "$busy" != 0 ]; then
+            echo "A build is already under way; it will pick these up."
+            exit 0
+          fi
+          gh workflow run build.yml --repo "$GITHUB_REPOSITORY" --ref "$DEFAULT_BRANCH"
+          {
+            echo "### Started a build for:"
+            printf -- '- %s\n' "${behind[@]}"
+          } >> "$GITHUB_STEP_SUMMARY"

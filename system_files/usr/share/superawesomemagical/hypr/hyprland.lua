@@ -26,6 +26,7 @@ package.path = table.concat({
 -- SuperAwesomeMagicalLinux's defaults, then the person's own.
 local vars = require("variables")
 for k, v in pairs({
+    browser       = "superawesomemagicalbrowser",
     editor        = "gnome-text-editor",
     fileExplorer  = "nautilus",
     audioSettings = "pavucontrol",

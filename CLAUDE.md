@@ -41,6 +41,15 @@ public domain or CC0/CC BY and credited in `CREDITS.md`.
   Hyprland version the `lionheartp/Hyprland` COPR ships (its 0.57 takes Lua configs, and the Lua
   API still moves; `check-image` runs Hyprland's own config check, so a mismatch fails CI). `build.sh` patches a few lines of the dotfiles and fails loudly if they
   no longer match; fix the patch list rather than loosening it.
+- The family's apps (SuperAwesomeMagical Browser in place of Fedora's Firefox, the Music and
+  Email desktop apps): not pinned on purpose. They're the owner's own releases, and the browser's
+  carry Firefox's security fixes. CI looks up each one's newest release
+  (`build_files/newest-release.sh`, which reads where `releases/latest/download/` redirects: the
+  sandbox's proxy blocks the release pages), passes it as `BROWSER_TAG`/`MUSIC_TAG`/`EMAIL_TAG` and
+  labels the image with it; `follow-apps.yml` rebuilds when one is behind. `build.sh` checks each
+  .rpm against its release's SHA256SUMS where there is one, and Email is left out until it has a
+  release. Music and Email are built on Ubuntu 24.04 and link OpenSSL 3, so the image carries
+  Fedora's `openssl3-libs` (Fedora 45's own is OpenSSL 4).
 - Fonts: revisions and SHA-256s at the top of `build.sh`.
 - Fedora version: `FEDORA_VERSION` in the workflow, `Containerfile` and `Justfile`.
 
@@ -76,6 +85,13 @@ installer of sensible size. The procedure isn't done until both are green. Chang
 `disk_config/iso.toml` or the ISO workflow can be tried with that workflow's *Run workflow* button
 (it uses the last published image). The sandbox hasn't the disk for a local ISO; `just iso` builds
 one on a real machine.
+
+The installer's look is `disk_config/installer/branding.py`: the ISO workflow makes a `product.img`
+from it (Anaconda's boot scripts lay `images/product.img` over the installer before it starts) and
+adds it with lorax's `mkksiso --skip-mkefiboot`, keeping the unbranded ISO if the boot records come
+out different. The product name already comes from os-release. The disc label is still
+bootc-image-builder's `Fedora-S-dvd-x86_64-45`: `mkksiso -V` would change it, but that rebuilds the
+EFI boot image (a loop mount, not possible in the sandbox) and can't be tried without booting it.
 
 The installer must make people create an account (there's no first-run wizard to do it later):
 never put `rootpw` (even `--lock`) in `disk_config/iso.toml`, since the installer then treats an

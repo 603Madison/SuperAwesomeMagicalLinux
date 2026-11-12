@@ -29,7 +29,8 @@ rounded cards.
 | Base | Fedora 45 via [Universal Blue](https://universal-blue.org)'s `base-main` (codecs, firmware, drivers) |
 | Desktop | [Hyprland](https://hypr.land) 0.57 with the SuperAwesomeMagical shell (`shell/`, built on Quickshell) |
 | Sign-in | SDDM with our own theme |
-| Apps | Firefox, Files (Nautilus), Text Editor, Image Viewer, foot terminal (fish), mpv, Software (Flathub) |
+| The family's apps | [SuperAwesomeMagical Browser](https://github.com/603Madison/SuperAwesomeMagicalBrowser) (Firefox in the family's look, tabs down the side), [Music](https://github.com/603Madison/SuperAwesomeMagicalMusic) (the desktop app for your Music server) and [Email](https://github.com/603Madison/SuperAwesomeMagicalEmail) (your mail, signed in with Authentik; the handler for mail links), each its newest release |
+| Apps | Files (Nautilus), Text Editor, Image Viewer, Terminal (foot, fish), mpv, Software (Flathub) |
 | Fonts | Lexend (interface), Cascadia Code Nerd Font (code), Material Symbols (icons) |
 
 ## Installing
@@ -39,6 +40,11 @@ rounded cards.
 3 days; *Run workflow* there makes a new one any time), write it to a USB stick (Fedora Media Writer
 or `dd`), and boot it. The installer asks which disk to use and has you create your account.
 
+The longest part is *Installing software*, which writes the whole system (about 12 GB) to the disk;
+on a laptop's SSD from a USB 3 stick that's minutes. In a virtual machine it depends on the virtual
+disk: give the VM a VirtIO disk with the host's write cache on and attach the ISO as a USB or VirtIO
+drive rather than an emulated SATA CD-ROM, or it can take much longer.
+
 **From another Fedora Atomic system** (Silverblue, Kinoite, Bazzite, Bluefin, ...):
 
 ```sh
@@ -47,9 +53,8 @@ systemctl reboot
 ```
 
 Either way, the system then follows `ghcr.io/603madison/superawesomemagicallinux:latest`, which
-CI rebuilds twice a week (Mondays and Thursdays) with Fedora's latest updates, and after every
-change here. The image package has to be public for installed systems to download updates without
-signing in to GitHub (Packages → superawesomemagicallinux → Package settings → Change visibility).
+CI rebuilds every day with Fedora's latest updates, within a few hours of a new release of the
+browser, Music or Email (so Firefox's security fixes arrive quickly), and after every change here.
 
 ## Updating
 
@@ -74,7 +79,7 @@ Your settings live in your home folder, so updates bring the new desktop without
 | Keys | |
 |---|---|
 | `Super` | Launcher |
-| `Super + T` / `W` / `E` | Terminal / Firefox / Files |
+| `Super + T` / `W` / `E` | Terminal / Browser / Files |
 | `Super + Q` | Close window |
 | `Super + 1`–`0` | Switch workspace |
 | `Super + Alt + Space` | Float or tile the window |
@@ -105,9 +110,10 @@ updates have to work around, so prefer the other two.
 
 ## Building
 
-CI (`.github/workflows/build.yml`) builds on every push and twice a week, runs the image's own
-checks, and publishes from the default branch; each publish then builds and checks an installer ISO
-(`.github/workflows/build-iso.yml`). To build locally on Linux with podman and
+CI (`.github/workflows/build.yml`) builds on every push, every day and whenever one of the
+family's apps has a new release (`follow-apps.yml` checks every three hours), runs
+the image's own checks, and publishes from the default branch; each publish then builds and checks
+an installer ISO (`.github/workflows/build-iso.yml`). To build locally on Linux with podman and
 [just](https://just.systems):
 
 ```sh

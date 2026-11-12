@@ -34,6 +34,11 @@ RUN --mount=type=bind,from=ctx,source=/shell.sh,target=/ctx/shell.sh \
 FROM ${BASE_IMAGE}:${FEDORA_VERSION}
 ARG FEDORA_VERSION
 ARG IMAGE_REF=ghcr.io/603madison/superawesomemagicallinux
+# Which releases of the family's apps to install (SuperAwesomeMagical Browser, Music, Email); empty
+# for the newest.
+ARG BROWSER_TAG=
+ARG MUSIC_TAG=
+ARG EMAIL_TAG=
 
 COPY --from=deps /out /
 COPY --from=shell /out-shell /
@@ -41,7 +46,8 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=bind,source=system_files,target=/ctx-files \
     --mount=type=cache,dst=/var/cache/libdnf5 \
     --mount=type=tmpfs,dst=/tmp \
-    FEDORA_VERSION="${FEDORA_VERSION}" IMAGE_REF="${IMAGE_REF}" /ctx/build.sh
+    FEDORA_VERSION="${FEDORA_VERSION}" IMAGE_REF="${IMAGE_REF}" BROWSER_TAG="${BROWSER_TAG}" MUSIC_TAG="${MUSIC_TAG}" EMAIL_TAG="${EMAIL_TAG}" \
+    /ctx/build.sh
 
 # podman leaves the dnf cache mount's (empty) folder behind; nothing in /var should ship.
 RUN rm -rf /var/cache/libdnf5 && bootc container lint
