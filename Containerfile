@@ -1,5 +1,5 @@
 # SuperAwesomeMagicalLinux: Fedora, image-based, with the SuperAwesomeMagical desktop
-# (Caelestia's shell on Hyprland, in the ecosystem's look).
+# (our own shell, grown from Caelestia's, on Hyprland).
 #
 # Built on Universal Blue's base-main, which is Fedora's atomic base with media codecs, hardware
 # video decoding and firmware already sorted. Installed systems update from this image as a whole
@@ -12,21 +12,31 @@ ARG FEDORA_VERSION=45
 FROM scratch AS ctx
 COPY build_files /
 
-# ---- Stage 1: compile Caelestia's shell and CLI against the same Fedora the image ships ----
-# (Only the files it uses are mounted, so changing anything else doesn't force a recompile.)
-FROM ${BASE_IMAGE}:${FEDORA_VERSION} AS caelestia
-RUN --mount=type=bind,from=ctx,source=/caelestia.sh,target=/ctx/caelestia.sh \
-    --mount=type=bind,source=system_files/usr/share/backgrounds/superawesomemagical/aurora.jpg,target=/ctx/aurora.jpg \
+# Stages 1a and 1b compile against the same Fedora the image ships. Each mounts only the files it
+# uses, so changing anything else doesn't force a recompile.
+
+# ---- Stage 1a: what the shell runs on (Quickshell, M3Shapes, libcava); rarely changes ----
+FROM ${BASE_IMAGE}:${FEDORA_VERSION} AS deps
+RUN --mount=type=bind,from=ctx,source=/deps.sh,target=/ctx/deps.sh \
     --mount=type=cache,dst=/var/cache/libdnf5 \
     --mount=type=tmpfs,dst=/tmp \
-    /ctx/caelestia.sh
+    /ctx/deps.sh
+
+# ---- Stage 1b: the desktop shell, from shell/ in this repository ----
+FROM deps AS shell
+RUN --mount=type=bind,from=ctx,source=/shell.sh,target=/ctx/shell.sh \
+    --mount=type=bind,source=shell,target=/ctx/shell \
+    --mount=type=bind,source=system_files/usr/share/backgrounds/superawesomemagical/aurora.jpg,target=/ctx/aurora.jpg \
+    --mount=type=tmpfs,dst=/tmp \
+    /ctx/shell.sh
 
 # ---- Stage 2: the OS image ----
 FROM ${BASE_IMAGE}:${FEDORA_VERSION}
 ARG FEDORA_VERSION
 ARG IMAGE_REF=ghcr.io/603madison/superawesomemagicallinux
 
-COPY --from=caelestia /out /
+COPY --from=deps /out /
+COPY --from=shell /out-shell /
 RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=bind,source=system_files,target=/ctx-files \
     --mount=type=cache,dst=/var/cache/libdnf5 \
