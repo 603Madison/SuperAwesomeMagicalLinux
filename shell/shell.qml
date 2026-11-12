@@ -24,7 +24,6 @@ ShellRoot {
         value: root
     }
 
-    GSFLoader {}
     ServiceLoader {}
 
     Background {}

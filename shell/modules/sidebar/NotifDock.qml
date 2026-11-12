@@ -95,24 +95,27 @@ Item {
             sourceComponent: ColumnLayout {
                 spacing: Tokens.spacing.extraLarge
 
-                Image {
-                    asynchronous: true
-                    source: Paths.absolutePath(Config.paths.noNotifsPic)
-                    fillMode: Image.PreserveAspectFit
-                    sourceSize.width: clipRect.width * 0.8 * ((QsWindow.window as QsWindow)?.devicePixelRatio ?? 1)
+                // A calm mark instead of a picture: a tick (or a lock) in a soft circle.
+                StyledRect {
+                    Layout.alignment: Qt.AlignHCenter
+                    implicitWidth: Tokens.sizes.dashboard.logoSize * 2.4
+                    implicitHeight: implicitWidth
+                    radius: implicitWidth / 2
+                    color: Colours.tPalette.m3surfaceContainerHigh
 
-                    layer.enabled: true
-                    layer.effect: Colouriser {
-                        colorizationColor: Colours.palette.m3outlineVariant
-                        brightness: 1
+                    MaterialIcon {
+                        anchors.centerIn: parent
+                        text: "done_all"
+                        color: Colours.palette.m3secondary
+                        fontStyle: Tokens.font.icon.builders.extraLarge.scale(1.3).build()
                     }
                 }
 
                 StyledText {
                     Layout.alignment: Qt.AlignHCenter
-                    text: Tr.tr("All up to date!")
-                    color: Colours.palette.m3outlineVariant
-                    font: Tokens.font.headline.builders.small.width(90).build()
+                    text: Tr.tr("You're all caught up")
+                    color: Colours.palette.m3onSurfaceVariant
+                    font: Tokens.font.title.builders.small.weight(Font.DemiBold).build()
                 }
             }
 

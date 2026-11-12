@@ -14,13 +14,17 @@ Singleton {
     property string osPrettyName
     property string osId
     property list<string> osIdLike
-    property string osLogo: Qt.resolvedUrl(`${Quickshell.shellDir}/assets/logo.svg`)
+    property string osLogo: Quickshell.iconPath("superawesomemagical", true)
     property bool isDefaultLogo: true
 
     property string uptime
     // Uptime trimmed to its two largest components
     property string uptimeShort
     readonly property string user: Quickshell.env("USER")
+    // The account's real name (its GECOS field), else the login name capitalised, and its first word.
+    property string realName
+    readonly property string displayName: realName || (user ? user.charAt(0).toUpperCase() + user.slice(1) : "")
+    readonly property string firstName: displayName.split(" ")[0]
     readonly property string wm: Quickshell.env("XDG_CURRENT_DESKTOP") || Quickshell.env("XDG_SESSION_DESKTOP")
     readonly property string shell: Quickshell.env("SHELL").split("/").pop()
 
@@ -60,16 +64,15 @@ Singleton {
             root.osId = fd("ID");
             root.osIdLike = fd("ID_LIKE").split(" ");
 
-            const logo = Quickshell.iconPath(fd("LOGO"), true);
-            if (GlobalConfig.general.logo === "caelestia") {
-                root.osLogo = Qt.resolvedUrl(`${Quickshell.shellDir}/assets/logo.svg`);
+            // The SuperAwesomeMagical mark (components/Logo.qml) unless a person picks their own
+            // icon name or image file in general.logo.
+            const custom = GlobalConfig.general.logo;
+            if (custom && custom !== "superawesomemagical") {
+                root.osLogo = Quickshell.iconPath(custom, true) || "file://" + Paths.absolutePath(custom);
+                root.isDefaultLogo = false;
+            } else {
+                root.osLogo = Quickshell.iconPath("superawesomemagical", true);
                 root.isDefaultLogo = true;
-            } else if (GlobalConfig.general.logo) {
-                root.osLogo = Quickshell.iconPath(GlobalConfig.general.logo, true) || "file://" + Paths.absolutePath(GlobalConfig.general.logo);
-                root.isDefaultLogo = false;
-            } else if (logo) {
-                root.osLogo = logo;
-                root.isDefaultLogo = false;
             }
         }
     }
@@ -80,6 +83,14 @@ Singleton {
         }
 
         target: GlobalConfig.general
+    }
+
+    Process {
+        running: root.user !== ""
+        command: ["getent", "passwd", root.user]
+        stdout: StdioCollector {
+            onStreamFinished: root.realName = (text.split(":")[4] ?? "").split(",")[0].trim()
+        }
     }
 
     FileView {

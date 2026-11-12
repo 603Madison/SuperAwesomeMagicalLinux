@@ -125,7 +125,7 @@ struct FontConfig {
     int size;
     int weight = QFont::Normal;
     bool italic = false;
-    QVariantMap vaxes = { { u"ROND"_s, 25 } };
+    QVariantMap vaxes = {};
 };
 
 } // namespace detail
@@ -157,30 +157,33 @@ struct FontConfig {
     };
 
 // clang-format off
-FONT_STYLE(Headline, u"GoogleSansFlex"_s,
-    FONT({ .size = 32, .weight = QFont::Medium }),
-    FONT({ .size = 28, .weight = QFont::Medium }),
-    FONT({ .size = 24, .weight = QFont::Medium })
+// SuperAwesomeMagical type: Lexend everywhere, as in all the apps, and on the bold side, which is how
+// they're meant to look (headlines and titles Bold, labels SemiBold, body Medium). "Mono" is Lexend
+// too: in the shell it's a look for labels and readouts, not code.
+FONT_STYLE(Headline, u"Lexend"_s,
+    FONT({ .size = 32, .weight = QFont::Bold }),
+    FONT({ .size = 28, .weight = QFont::Bold }),
+    FONT({ .size = 24, .weight = QFont::Bold })
 )
-FONT_STYLE(Title, u"GoogleSansFlex"_s,
-    FONT({ .size = 22, .weight = QFont::Medium }),
+FONT_STYLE(Title, u"Lexend"_s,
+    FONT({ .size = 22, .weight = QFont::Bold }),
+    FONT({ .size = 16, .weight = QFont::Bold }),
+    FONT({ .size = 14, .weight = QFont::Bold })
+)
+FONT_STYLE(Body, u"Lexend"_s,
     FONT({ .size = 16, .weight = QFont::Medium }),
-    FONT({ .size = 14, .weight = QFont::Medium })
-)
-FONT_STYLE(Body, u"GoogleSansFlex"_s,
-    FONT({ .size = 16 }),
-    FONT({ .size = 14 }),
-    FONT({ .size = 12 })
-)
-FONT_STYLE(Label, u"GoogleSansFlex"_s,
     FONT({ .size = 14, .weight = QFont::Medium }),
-    FONT({ .size = 12, .weight = QFont::Medium }),
-    FONT({ .size = 11 })
+    FONT({ .size = 12, .weight = QFont::Medium })
 )
-FONT_STYLE(Mono, u"CaskaydiaCove NF"_s,
-    FONT({ .size = 16, .vaxes = {} }),
-    FONT({ .size = 14, .vaxes = {} }),
-    FONT({ .size = 12, .vaxes = {} })
+FONT_STYLE(Label, u"Lexend"_s,
+    FONT({ .size = 14, .weight = QFont::DemiBold }),
+    FONT({ .size = 12, .weight = QFont::DemiBold }),
+    FONT({ .size = 11, .weight = QFont::Medium })
+)
+FONT_STYLE(Mono, u"Lexend"_s,
+    FONT({ .size = 16, .weight = QFont::Medium }),
+    FONT({ .size = 14, .weight = QFont::Medium }),
+    FONT({ .size = 12, .weight = QFont::Medium })
 )
 // clang-format on
 
@@ -214,9 +217,9 @@ class AppearanceFont : public settings::ObjectNode {
     CONFIG_SUBOBJECT(FontStyleLabel, label)
     CONFIG_SUBOBJECT(FontStyleMono, mono)
     CONFIG_SUBOBJECT(FontStyleIcon, icon)
-    CONFIG_PROPERTY(QString, clock, u"Rubik"_s)
+    CONFIG_PROPERTY(QString, clock, u"Lexend"_s)
     // Google Sans Flex doesn't play well with unicode symbols apparently, so use Rubik instead
-    CONFIG_PROPERTY(QString, workspaces, u"Rubik"_s)
+    CONFIG_PROPERTY(QString, workspaces, u"Lexend"_s)
 };
 
 class AnimDurations : public settings::ObjectNode {

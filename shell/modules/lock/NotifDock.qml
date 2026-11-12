@@ -48,24 +48,27 @@ ColumnLayout {
             sourceComponent: ColumnLayout {
                 spacing: Tokens.spacing.largeIncreased
 
-                Image {
-                    asynchronous: true
-                    source: Paths.absolutePath(Config.paths.lockNoNotifsPic)
-                    fillMode: Image.PreserveAspectFit
-                    sourceSize.width: clipRect.width * 0.8 * ((QsWindow.window as QsWindow)?.devicePixelRatio ?? 1)
+                // A calm mark instead of a picture: a tick (or a lock) in a soft circle.
+                StyledRect {
+                    Layout.alignment: Qt.AlignHCenter
+                    implicitWidth: Tokens.sizes.dashboard.logoSize * 2.4
+                    implicitHeight: implicitWidth
+                    radius: implicitWidth / 2
+                    color: Colours.tPalette.m3surfaceContainerHigh
 
-                    layer.enabled: true
-                    layer.effect: Colouriser {
-                        colorizationColor: Colours.palette.m3outlineVariant
-                        brightness: 1
+                    MaterialIcon {
+                        anchors.centerIn: parent
+                        text: Config.lock.hideNotifs ? "lock" : "done_all"
+                        color: Config.lock.hideNotifs ? Colours.palette.m3onSurfaceVariant : Colours.palette.m3secondary
+                        fontStyle: Tokens.font.icon.builders.extraLarge.scale(1.3).build()
                     }
                 }
 
                 StyledText {
                     Layout.alignment: Qt.AlignHCenter
-                    text: Config.lock.hideNotifs ? Tr.tr("Unlock for notifications") : Tr.tr("No notifications")
-                    color: Colours.palette.m3outlineVariant
-                    font: Tokens.font.mono.builders.large.weight(Font.Medium).build()
+                    text: Config.lock.hideNotifs ? Tr.tr("Unlock to see notifications") : Tr.tr("You're all caught up")
+                    color: Colours.palette.m3onSurfaceVariant
+                    font: Tokens.font.title.builders.small.weight(Font.DemiBold).build()
                 }
             }
 

@@ -49,16 +49,16 @@ Column {
         KeyNavigation.down: hibernate
     }
 
-    AnimatedImage {
+    // The SuperAwesomeMagical mark, between the buttons.
+    Item {
         width: Tokens.sizes.session.button
         height: Tokens.sizes.session.button
-        sourceSize.width: width * ((QsWindow.window as QsWindow)?.devicePixelRatio ?? 1)
 
-        playing: visible
-        asynchronous: true
-        speed: Config.general.sessionGifSpeed
-        source: Paths.absolutePath(Config.paths.sessionGif)
-        fillMode: AnimatedImage.PreserveAspectFit
+        Logo {
+            anchors.centerIn: parent
+            width: parent.width * 0.7
+            height: parent.height * 0.7
+        }
     }
 
     SessionButton {

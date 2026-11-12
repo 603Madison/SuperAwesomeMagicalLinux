@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
 import Quickshell.Io
 import Caelestia
 import Caelestia.Config
@@ -11,9 +12,6 @@ import qs.modules.nexus.common
 
 PageBase {
     id: root
-
-    // Plugin support is not wired up yet; always 0 for now
-    readonly property int pluginCount: 0
 
     property string quickshellVersion
     property string cliVersion
@@ -35,8 +33,8 @@ PageBase {
             }
         }
 
-        // Parsed from the caelestia CLI's package listing; the sh wrapper avoids a
-        // warning when the (optional) CLI isn't installed
+        // The desktop tools' version, from their package listing; the sh wrapper avoids a
+        // warning when they aren't installed
         Process {
             running: true
             command: ["sh", "-c", "caelestia --version 2>/dev/null"]
@@ -71,13 +69,13 @@ PageBase {
                 StyledText {
                     Layout.alignment: Qt.AlignHCenter
                     Layout.topMargin: Tokens.spacing.small
-                    text: "Caelestia"
-                    font: Tokens.font.headline.builders.large.width(110).build()
+                    text: "SuperAwesomeMagical"
+                    font: Tokens.font.headline.builders.large.weight(Font.Bold).build()
                 }
 
                 StyledText {
                     Layout.alignment: Qt.AlignHCenter
-                    text: CUtils.version ? `v${CUtils.version}` : "…"
+                    text: SysInfo.osPrettyName || SysInfo.osName || "…"
                     color: Colours.palette.m3onSurfaceVariant
                     font: Tokens.font.body.medium
                 }
@@ -124,12 +122,12 @@ PageBase {
 
         InfoRow {
             first: true
-            label: Tr.trCtx("Shell", "the caelestia shell itself, not a unix shell")
+            label: Tr.trCtx("Desktop", "the desktop shell itself, not a unix shell")
             value: CUtils.version || "…"
         }
 
         InfoRow {
-            label: Tr.trCtx("CLI", "the caelestia command line tool")
+            label: Tr.trCtx("Desktop tools", "the desktop's command line tool")
             value: root.cliVersion || "…"
         }
 
@@ -144,16 +142,27 @@ PageBase {
             value: CUtils.qtVersion || "…"
         }
 
-        // Plugins
+        // Updates: the system downloads them by itself each night and they take over at the next
+        // restart (with the previous version kept to fall back to); this just does it now.
         SectionHeader {
-            text: Tr.tr("Plugins")
+            text: Tr.tr("Updates")
         }
 
         InfoRow {
             first: true
+            icon: "nightlight"
+            label: Tr.tr("Automatic updates")
+            value: Tr.tr("Every night")
+        }
+
+        RowButton {
             last: true
-            label: Tr.tr("Loaded plugins")
-            value: root.pluginCount.toString()
+            icon: "system_update_alt"
+            text: Tr.tr("Check for updates now")
+            subtext: Tr.tr("Opens a terminal, which asks for your password")
+            trailingIcon: "open_in_new"
+            onClicked: Quickshell.execDetached(["foot", "--title", "Update SuperAwesomeMagicalLinux", "sh", "-c",
+                "superawesomemagical-update; echo; read -rp 'Press Enter to close. ' _"])
         }
     }
 }

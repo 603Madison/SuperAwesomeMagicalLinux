@@ -146,7 +146,7 @@ Item {
 
         Loader {
             anchors.centerIn: parent
-            sourceComponent: SysInfo.isDefaultLogo ? caelestiaLogo : osLogo
+            sourceComponent: SysInfo.isDefaultLogo ? brandLogo : osLogo
         }
     }
 
@@ -163,13 +163,11 @@ Item {
     }
 
     Component {
-        id: caelestiaLogo
+        id: brandLogo
 
         Logo {
             implicitWidth: Tokens.sizes.dashboard.logoSize
             implicitHeight: Tokens.sizes.dashboard.logoSize
-            topColour: Colours.palette.m3primary
-            bottomColour: Colours.palette.m3onPrimaryContainer
         }
     }
 
@@ -257,7 +255,7 @@ Item {
                 id: wmIcon
 
                 anchors.verticalCenter: parent.verticalCenter
-                text: "select_window"
+                text: "waving_hand"
                 color: Colours.palette.m3onSecondaryContainer
                 fontStyle: wmText.font
             }
@@ -267,9 +265,10 @@ Item {
 
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.verticalCenterOffset: Math.round(fontInfo.pointSize * 0.1)
-                text: SysInfo.wm + "..."
+                // A hello in the speech bubble.
+                text: SysInfo.firstName ? Tr.tr("Hi, %1!").arg(SysInfo.firstName) : Tr.tr("Hi there!")
                 color: Colours.palette.m3onSecondaryContainer
-                font: Tokens.font.body.builders.small.vaxis("slnt", -4).build()
+                font: Tokens.font.body.builders.medium.weight(Font.Bold).build()
                 width: Math.min(implicitWidth, Tokens.sizes.dashboard.userWidth - wmContainer.x - Tokens.padding.medium * 2 - wmIcon.implicitWidth - wmLabel.spacing - Tokens.padding.extraLarge)
                 elide: Text.ElideRight
             }

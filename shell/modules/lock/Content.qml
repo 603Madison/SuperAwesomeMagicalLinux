@@ -20,7 +20,7 @@ RowLayout {
             rootHeight: root.height
         }
 
-        Fetch {
+        Hello {
             Layout.fillWidth: true
             rootHeight: root.height
         }

@@ -39,10 +39,6 @@ Item {
         onTriggered: Players.active?.positionChanged()
     }
 
-    ServiceRef {
-        service: Audio.beatTracker
-    }
-
     CircularProgress {
         id: prog
 
@@ -161,21 +157,83 @@ Item {
         }
     }
 
-    AnimatedImage {
-        id: bongocat
+    // Aurora bars: the music as a little aurora, purple fading into green. At rest they settle
+    // into a row of dots.
+    Item {
+        id: aurora
+
+        readonly property int barCount: 16
+        readonly property real gap: Tokens.spacing.extraSmall
+        readonly property list<real> levels: {
+            const v = Audio.cava.values;
+            const n = v?.length ?? 0;
+            const out = [];
+            for (let i = 0; i < barCount; i++) {
+                if (!n) {
+                    out.push(0);
+                    continue;
+                }
+                // Average the visualiser's bars that fall into this one.
+                const a = Math.floor(i * n / barCount);
+                const b = Math.max(a + 1, Math.floor((i + 1) * n / barCount));
+                let sum = 0;
+                for (let j = a; j < b; j++)
+                    sum += v[j];
+                out.push(sum / (b - a));
+            }
+            return out;
+        }
 
         anchors.top: controls.bottom
         anchors.bottom: parent.bottom
         anchors.left: parent.left
         anchors.right: parent.right
-        anchors.topMargin: Tokens.spacing.small
+        anchors.topMargin: Tokens.spacing.large
         anchors.bottomMargin: Tokens.padding.large
-        anchors.margins: Tokens.padding.extraLargeIncreased
+        anchors.leftMargin: Tokens.padding.extraLargeIncreased
+        anchors.rightMargin: Tokens.padding.extraLargeIncreased
 
-        playing: Players.active?.isPlaying ?? false
-        speed: Audio.beatTracker.bpm / Config.general.mediaGifSpeedAdjustment // qmllint disable unresolved-type
-        source: Paths.absolutePath(Config.paths.mediaGif)
-        asynchronous: true
-        fillMode: AnimatedImage.PreserveAspectFit
+        opacity: Players.active?.isPlaying ? 1 : 0.45
+
+        Behavior on opacity {
+            Anim {}
+        }
+
+        ServiceRef {
+            service: Audio.cava
+        }
+
+        Repeater {
+            model: aurora.barCount
+
+            Rectangle {
+                id: bar
+
+                required property int index
+
+                width: (aurora.width - aurora.gap * (aurora.barCount - 1)) / aurora.barCount
+                height: Math.max(width, aurora.height * Math.min(1, aurora.levels[index] ?? 0))
+                x: index * (width + aurora.gap)
+                y: aurora.height - height
+                radius: width / 2
+
+                gradient: Gradient {
+                    GradientStop {
+                        position: 0
+                        color: Colours.palette.m3primary
+                    }
+                    GradientStop {
+                        position: 1
+                        color: Colours.palette.m3secondary
+                    }
+                }
+
+                Behavior on height {
+                    Anim {
+                        type: Anim.StandardSmall
+                    }
+                }
+            }
+        }
     }
 }
