@@ -28,9 +28,10 @@ rounded cards.
 
 ## Installing
 
-**From the ISO.** Run *Build installer ISO* from the Actions tab, download the ISO from the run,
-write it to a USB stick (Fedora Media Writer or `dd`), and boot it. The installer asks which disk
-to use and has you create your account.
+**From the ISO.** CI builds a fresh installer ISO after every image it publishes: open the latest
+*Build installer ISO* run in the Actions tab, download the ISO from its Artifacts (they're kept for
+3 days; *Run workflow* there makes a new one any time), write it to a USB stick (Fedora Media Writer
+or `dd`), and boot it. The installer asks which disk to use and has you create your account.
 
 **From another Fedora Atomic system** (Silverblue, Kinoite, Bazzite, Bluefin, ...):
 
@@ -84,7 +85,8 @@ updates have to work around, so prefer the other two.
 ## Building
 
 CI (`.github/workflows/build.yml`) builds on every push and twice a week, runs the image's own
-checks, and publishes from the default branch. To build locally on Linux with podman and
+checks, and publishes from the default branch; each publish then builds and checks an installer ISO
+(`.github/workflows/build-iso.yml`). To build locally on Linux with podman and
 [just](https://just.systems):
 
 ```sh

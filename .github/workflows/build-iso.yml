@@ -1,18 +1,35 @@
 name: Build installer ISO
 
-# Makes an installer ISO from the published image (let "Build image" publish it first). The ISO carries
-# the whole OS, so it installs offline; installed systems then update from the registry.
+# Makes an installer ISO from the published image, automatically after every "Build image" run that
+# publishes one (and by hand from the Actions tab whenever wanted). The ISO carries the whole OS, so
+# it installs offline; installed systems then update from the registry.
 #
-# Run it from the Actions tab. The ISO is attached to the run as an artifact for a few days.
+# The ISO and its checksum are attached to the run as an artifact for a few days; the run's summary
+# page lists its size and SHA-256.
 
 on:
+  workflow_run:
+    workflows: ["Build image"]
+    types: [completed]
   workflow_dispatch:
+
+# A newer image makes any ISO still being built from an older one pointless.
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
 
 env:
   IMAGE_NAME: superawesomemagicallinux
 
 jobs:
   iso:
+    # By hand, or after a "Build image" run that published: one that succeeded on the default
+    # branch, from anything but a pull request (those only build and check).
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event != 'pull_request' &&
+       github.event.workflow_run.head_branch == github.event.repository.default_branch)
     runs-on: ubuntu-24.04
     timeout-minutes: 120
     permissions:
@@ -26,7 +43,10 @@ jobs:
           sudo docker image prune --all --force > /dev/null || true
           df -h /
 
+      # The installer settings from the same commit the image was built from.
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - name: Pull the published image
         id: image
@@ -35,10 +55,12 @@ jobs:
           echo "ref=${ref}" >> "$GITHUB_OUTPUT"
           echo "${{ secrets.GITHUB_TOKEN }}" | sudo podman login ghcr.io --username "${{ github.actor }}" --password-stdin
           sudo podman pull "${ref}"
+          echo "version=$(sudo podman image inspect "${ref}" --format '{{ index .Labels "org.opencontainers.image.version" }}')" >> "$GITHUB_OUTPUT"
 
       - name: Build the ISO
         env:
           REF: ${{ steps.image.outputs.ref }}
+          VERSION: ${{ steps.image.outputs.version }}
         run: |
           mkdir -p output
           sed "s|@IMAGE_REF@|${REF}|g" disk_config/iso.toml > output/config.toml
@@ -52,14 +74,39 @@ jobs:
             --rootfs btrfs \
             --use-librepo=True \
             "${REF}"
-          sudo mv output/bootiso/install.iso "output/SuperAwesomeMagicalLinux-$(date -u +%Y%m%d).iso"
+          iso="SuperAwesomeMagicalLinux-${VERSION:-$(date -u +%Y%m%d)}.iso"
+          sudo mv output/bootiso/install.iso "output/${iso}"
           sudo chown -R "$(id -u):$(id -g)" output
-          (cd output && sha256sum ./*.iso > SHA256SUMS)
+          (cd output && sha256sum "${iso}" > SHA256SUMS)
+          echo "ISO=${iso}" >> "$GITHUB_ENV"
           ls -lh output
+
+      - name: Check the ISO
+        run: |
+          iso="output/${ISO}"
+          size=$(stat -c %s "${iso}")
+          echo "size: $((size / 1048576)) MiB"
+          # A real installer is gigabytes; anything small means the build went wrong.
+          test "${size}" -gt $((1024 * 1048576))
+          # Bootable ISO 9660 with an EFI boot image.
+          command -v xorriso >/dev/null || { sudo apt-get update -qq && sudo apt-get install -y -qq xorriso; }
+          file "${iso}" | tee /dev/stderr | grep -q "ISO 9660"
+          xorriso -indev "${iso}" -report_el_torito plain 2>/dev/null | tee /dev/stderr | grep -qi "uefi\|efi"
+          {
+            echo "### ${ISO}"
+            echo
+            echo "| | |"
+            echo "|---|---|"
+            echo "| Image | \`${{ steps.image.outputs.ref }}\` (${{ steps.image.outputs.version }}) |"
+            echo "| Size | $((size / 1048576)) MiB |"
+            echo "| SHA-256 | \`$(cut -d' ' -f1 output/SHA256SUMS)\` |"
+            echo
+            echo "Download it from **Artifacts** below, write it to a USB stick, and boot from it."
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/upload-artifact@v4
         with:
-          name: SuperAwesomeMagicalLinux-iso
+          name: ${{ env.ISO }}
           path: |
             output/*.iso
             output/SHA256SUMS

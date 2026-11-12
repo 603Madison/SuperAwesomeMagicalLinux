@@ -50,6 +50,13 @@ programs present, every compiled file's libraries resolve, every QML module the 
 installed, fonts resolve, patches applied, branding. Add a check when adding something the desktop
 depends on.
 
+After pushing, follow the whole chain through: "Build image" (build, check, publish), then "Build
+installer ISO", which runs by itself after every publish and checks the ISO is a bootable EFI
+installer of sensible size. The procedure isn't done until both are green. Changes to
+`disk_config/iso.toml` or the ISO workflow can be tried with that workflow's *Run workflow* button
+(it uses the last published image). The sandbox hasn't the disk for a local ISO; `just iso` builds
+one on a real machine.
+
 ## Building in a Claude cloud sandbox
 
 - Start Docker yourself: `dockerd > /tmp/dockerd.log 2>&1 &`.
