@@ -124,6 +124,12 @@ for scheme in /usr/share/superawesomemagical/schemes/*/; do
     ln -sfn "${scheme%/}" "$schemes/$(basename "$scheme")"
 done
 
+# One terminal in the launcher, called Terminal: foot's client and server entries are for scripts.
+desktop-file-edit --set-name=Terminal /usr/share/applications/foot.desktop
+for entry in footclient foot-server; do
+    desktop-file-edit --set-key=NoDisplay --set-value=true "/usr/share/applications/$entry.desktop"
+done
+
 # Only our session at the sign-in screen: the plain Hyprland ones have none of the setup.
 rm -f /usr/share/wayland-sessions/hyprland*.desktop /usr/share/wayland-sessions/weston*.desktop
 

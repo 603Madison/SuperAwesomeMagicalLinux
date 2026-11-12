@@ -10,6 +10,12 @@ Item {
     id: root
 
     required property real centerScale
+    // The column's width: the clock shrinks to fit it (Lexend Bold digits are wide, and a 24-hour
+    // clock puts two big pairs side by side).
+    required property real maxWidth
+
+    readonly property real minuteScale: Units.twelveHourClock ? 3.8 : 7
+    readonly property real fit: Math.min(1, maxWidth / (refHours.advanceWidth + refMinutes.advanceWidth + Tokens.spacing.small))
 
     function calcTopOff(metrics: TextMetrics): real {
         return metrics.tightBoundingRect.y - metrics.boundingRect.y;
@@ -18,13 +24,28 @@ Item {
     implicitWidth: hours.implicitWidth + minutes.implicitWidth + Tokens.spacing.small
     implicitHeight: hourMetrics.tightBoundingRect.height
 
+    // Sized with a fixed "00" so the clock doesn't change size as the time does.
+    TextMetrics {
+        id: refHours
+
+        text: "00"
+        font: Tokens.font.headline.builders.large.scale(7 * root.centerScale).build()
+    }
+
+    TextMetrics {
+        id: refMinutes
+
+        text: "00"
+        font: Tokens.font.headline.builders.large.scale(root.minuteScale * root.centerScale).build()
+    }
+
     StyledText {
         id: hours
 
         y: -root.calcTopOff(hourMetrics)
         text: Time.hourStr
         color: Colours.palette.m3primary
-        font: Tokens.font.headline.builders.large.scale(7 * root.centerScale).width(30).build()
+        font: Tokens.font.headline.builders.large.scale(7 * root.centerScale * root.fit).build()
 
         TextMetrics {
             id: hourMetrics
@@ -42,7 +63,7 @@ Item {
 
         text: Time.minuteStr
         color: Colours.palette.m3secondary
-        font: Tokens.font.headline.builders.large.scale((Units.twelveHourClock ? 3.8 : 7) * root.centerScale).width(30).build()
+        font: Tokens.font.headline.builders.large.scale(root.minuteScale * root.centerScale * root.fit).build()
 
         TextMetrics {
             id: minuteMetrics
@@ -80,7 +101,7 @@ Item {
 
                 text: Time.amPmStr
                 color: Colours.palette.m3onSurface
-                font: Tokens.font.headline.builders.small.scale(2 * root.centerScale).width(30).build()
+                font: Tokens.font.headline.builders.small.scale(2 * root.centerScale * root.fit).build()
 
                 TextMetrics {
                     id: amPmMetrics

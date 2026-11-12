@@ -55,6 +55,8 @@ StyledRect {
             shape: MaterialShape.Pentagon
 
             MaterialShape {
+                // Only with a temperature sensor to read (virtual machines have none).
+                visible: Cpu.temperature > 0
                 x: cpu.mShape.pointAtAngle(45).x - implicitSize / 2 + Tokens.padding.medium
                 y: cpu.mShape.pointAtAngle(45).y - implicitSize / 2
 

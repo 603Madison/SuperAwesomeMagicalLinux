@@ -101,6 +101,7 @@ check "polkit agent patched for Fedora" grep -q /usr/libexec/hyprpolkitagent "$h
 check "start-shell wired up" grep -q superawesomemagical/start-shell "$hypr/caelestia/hyprland/execs.lua"
 check "window groups in Lexend" grep -q 'font_family = "Lexend"' "$hypr/caelestia/hyprland/group.lua"
 check "no Arch-only qtengine" sh -c "! grep -q qtengine '$hypr/caelestia/hyprland/env.lua'"
+check "one Terminal in the launcher" sh -c 'grep -qx "Name=Terminal" /usr/share/applications/foot.desktop && grep -qx "NoDisplay=true" /usr/share/applications/footclient.desktop'
 check "only our session offered" sh -c 'ls /usr/share/wayland-sessions/ | grep -qx superawesomemagical.desktop && [ "$(ls /usr/share/wayland-sessions/ | wc -l)" -eq 1 ]'
 
 # Hyprland's own check of the whole config, as a new account would get it. Only inside a container

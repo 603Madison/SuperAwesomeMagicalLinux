@@ -4,6 +4,7 @@
 # normal account, opens each requested panel and saves a screenshot of it to /out.
 #
 #   SHOTS="dashboard:drawers toggle dashboard;lock:lock lock"   name:IPC call, ";"-separated
+#   (a call starting with ! is a shell command instead, e.g. "toast:!notify-send Hello")
 #   RHI=vulkan (default, lavapipe) or software; software loses the panels' backgrounds.
 #
 # `just shell-preview` runs it; see the Justfile.
@@ -34,6 +35,12 @@ IFS=';' read -ra targets <<< "${SHOTS:-}"
 for target in "${targets[@]}"; do
     [ -n "$target" ] || continue
     name=${target%%:*} call=${target#*:}
+    if [ "${call:0:1}" = "!" ]; then # a shell command, e.g. !notify-send hello
+        eval "${call:1}" >> /out/ipc.log 2>&1 &
+        sleep 3
+        grim "/out/$name.png"
+        continue
+    fi
     eval "qs -c caelestia ipc call $call" >> /out/ipc.log 2>&1
     sleep 3
     grim "/out/$name.png"
@@ -44,5 +51,6 @@ done
 EOF
 chmod 755 /tmp/inner.sh
 chown sam /out
-su - sam -c "SHOTS='${SHOTS:-}' RHI='${RHI:-vulkan}' dbus-run-session -- bash /tmp/inner.sh"
+export SHOTS=${SHOTS:-} RHI=${RHI:-vulkan}
+su - sam -w SHOTS,RHI -c "dbus-run-session -- bash /tmp/inner.sh"
 ls /out

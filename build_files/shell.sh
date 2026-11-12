@@ -16,13 +16,16 @@ mkdir -p "$OUT" "$SRC"
 # ---- The shell ----
 cp -R /ctx/shell "$SRC/shell"
 cd "$SRC/shell"
+# Which source this is, for `caelestia --version` and bug reports: a hash of shell/ (the build sees
+# no git history, and a commit hash would recompile the shell on every commit).
+SOURCE_ID=src-$(find . -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum | sha256sum | cut -c1-12)
 # Our wallpaper when none has been chosen yet.
 python3 -c "from PIL import Image; Image.open('/ctx/aurora.jpg').save('assets/wallpaper.webp', quality=90)"
 cmake -S . -B build -G Ninja \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DVERSION="$SHELL_VERSION" \
-    -DGIT_REVISION="${GIT_REVISION:-unknown}" \
+    -DGIT_REVISION="$SOURCE_ID" \
     -DDISTRIBUTOR="SuperAwesomeMagicalLinux" \
     -DINSTALL_LIBDIR=/usr/lib/caelestia \
     -DINSTALL_QMLDIR=/usr/lib64/qt6/qml \
@@ -55,8 +58,25 @@ patches = [
     ("parser.py", 'help="update the Caelestia dotfiles")', "help=argparse.SUPPRESS)"),
     ("subcommands/install.py", "    def run(self) -> None:\n", "    def run(self) -> None:\n" + stop),
     ("subcommands/update.py", "    def run(self) -> None:\n", "    def run(self) -> None:\n" + stop),
+    # `caelestia --version` describes this system, not an Arch dotfiles install.
+    ("utils/version.py", """    meta_package = print_packages()
+    print_legacy_install(meta_package)
+
+    print()
+    print_dots_version()
+""", """    import importlib.metadata
+    import platform
+
+    _header("System:")
+    print(f"{INDENT}{platform.freedesktop_os_release().get('PRETTY_NAME', 'unknown')}")
+
+    print()
+    _header("Desktop tools:")
+    print(f"{INDENT}{importlib.metadata.version('caelestia')}")
+"""),
+    ("utils/version.py", '        _header("Shell:")', '        _header("Desktop:")'),
     # Its notifications (screenshots, recordings, schemes) come from the OS, by name.
-    ("utils/notify.py", '"-a", "caelestia-cli"', '"-a", "SuperAwesomeMagicalLinux"'),
+    ("utils/notify.py", '"-a", "caelestia-cli"', '"-a", "SuperAwesomeMagical"'),
     # The clipboard and emoji pickers, in Lexend and as round as the rest.
     ("data/templates/fuzzel.ini", "font=JetBrains Mono NF:size=17", "font=Lexend:weight=medium:size=13"),
     ("data/templates/fuzzel.ini", "radius=10", "radius=18"),
