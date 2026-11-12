@@ -139,6 +139,7 @@ else
 fi
 
 echo "Sign-in and system"
+check "fingerprint unlock available" sh -c 'command -v fprintd-enroll && test -f /usr/lib64/security/pam_fprintd.so'
 check "sign-in theme" test -f /usr/share/sddm/themes/superawesomemagical/Main.qml
 check "sign-in theme selected" sh -c 'cat /usr/lib/sddm/sddm.conf.d/*.conf /etc/sddm.conf.d/*.conf 2>/dev/null | grep -q "^Current=superawesomemagical"'
 check "sddm enabled" systemctl is-enabled sddm.service

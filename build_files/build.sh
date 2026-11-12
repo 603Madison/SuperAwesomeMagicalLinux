@@ -51,6 +51,9 @@ packages=(
 
     # Things the shell and CLI call on
     ddcutil brightnessctl lm_sensors upower tuned-ppd NetworkManager-wifi bluez
+    # Fingerprint readers (the Framework 13's, for one): the lock screen unlocks with an enrolled
+    # finger (fprintd-enroll), and the sign-in screen keeps the password the keyring needs
+    fprintd fprintd-pam
     grim slurp swappy wl-clipboard cliphist fuzzel libnotify dconf trash-cli
     gnome-keyring xdg-user-dirs xdg-utils
 

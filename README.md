@@ -85,7 +85,7 @@ Your settings live in your home folder, so updates bring the new desktop without
 | `Super + Alt + Space` | Float or tile the window |
 | `Super + F` | Fullscreen |
 | `Super + N` | Sidebar (notifications, quick settings) |
-| `Super + L` | Lock |
+| `Super + L` | Lock (unlocks with a fingerprint too, once enrolled: `fprintd-enroll`) |
 | `Super + Shift + S` | Screenshot a region |
 | `Super + V` | Clipboard history |
 | `Ctrl + Alt + Delete` | Session menu (log out, restart, shut down) |
