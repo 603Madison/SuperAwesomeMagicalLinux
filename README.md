@@ -4,7 +4,12 @@ The SuperAwesomeMagical ecosystem's operating system: Fedora, image-based, with 
 same look as the apps: Lexend everywhere, the brand's aurora purple and green over cool slate, soft
 rounded cards.
 
-![The sign-in screen: a large Lexend clock and a rounded slate card over a photo of purple and green northern lights](docs/screenshots/sign-in.jpg)
+![The sign-in screen: a large bold Lexend clock and a rounded slate card over a photo of purple and green northern lights, with the SuperAwesomeMagical sparkles and name at the bottom](docs/screenshots/sign-in.jpg)
+
+| | |
+|---|---|
+| ![The dashboard over the aurora wallpaper: weather, a "Hi, Sam!" greeting, the clock, calendar, system meters and the music player](docs/screenshots/dashboard.jpg) | ![The lock screen: a big purple and green clock, weather, a "Good evening" card with the sparkles, the music card and notifications](docs/screenshots/lock.jpg) |
+| ![Settings, on the Updates page: "Update ready", the installed version, and buttons to restart, check now or go back](docs/screenshots/settings-updates.jpg) | |
 
 - **Stable.** The whole OS is one tested image. Updates download in the background and apply on
   the next restart, and if one ever misbehaves the previous version is one command away

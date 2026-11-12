@@ -93,7 +93,7 @@ Item {
 
         animate: true
         horizontalAlignment: Text.AlignHCenter
-        text: (Players.active?.trackAlbum ?? Tr.tr("Your music shows up here")) || Tr.tr("Unknown album")
+        text: Players.active ? (Players.active.trackAlbum || Tr.tr("Unknown album")) : Tr.tr("Music shows up here")
         color: Colours.palette.m3outline
         font: Tokens.font.body.small
 
@@ -110,7 +110,7 @@ Item {
 
         animate: true
         horizontalAlignment: Text.AlignHCenter
-        text: (Players.active?.trackArtist ?? "") || Tr.tr("Unknown artist")
+        text: Players.active ? (Players.active.trackArtist || Tr.tr("Unknown artist")) : ""
         color: Colours.palette.m3secondary
 
         width: parent.implicitWidth - Tokens.padding.extraLargeIncreased
