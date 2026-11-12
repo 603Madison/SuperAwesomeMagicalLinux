@@ -1,7 +1,7 @@
 // SuperAwesomeMagicalLinux's sign-in screen (SDDM, Qt 6).
 //
-// The ecosystem's look: Lexend throughout, a big light clock like Weather's temperature, and one
-// rounded slate card over the blurred wallpaper. Colours are the shared dark slate scheme with
+// The ecosystem's look: Lexend throughout, a big bold clock like Weather's temperature, one rounded
+// slate card over the blurred wallpaper, and the SuperAwesomeMagical mark and name at the bottom. Colours are the shared dark slate scheme with
 // the brand's aurora purple and green as accents; theme.conf can change them and the wallpaper.
 
 import QtQuick
@@ -318,7 +318,26 @@ Rectangle {
         }
     }
 
-    // ---- Bottom bar: session on the left, power on the right ----
+    // ---- Bottom bar: session on the left, our mark and name in the middle, power on the right ----
+
+    Row {
+        anchors { horizontalCenter: parent.horizontalCenter; bottom: parent.bottom; bottomMargin: 36 }
+        spacing: 10
+        Image {
+            anchors.verticalCenter: parent.verticalCenter
+            source: "file:///usr/share/icons/hicolor/scalable/apps/superawesomemagical.svg"
+            sourceSize { width: 30; height: 30 }
+            width: 30
+            height: 30
+        }
+        Text {
+            anchors.verticalCenter: parent.verticalCenter
+            textFormat: Text.StyledText
+            text: "<b>SuperAwesomeMagical</b><font color=\"" + c.primary + "\">Linux</font>"
+            color: c.ink
+            font { family: root.font; weight: Font.Medium; pixelSize: 17 }
+        }
+    }
 
     Row {
         anchors { left: parent.left; bottom: parent.bottom; margins: 28 }
