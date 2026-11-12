@@ -64,6 +64,12 @@ jobs:
         run: |
           mkdir -p output
           sed "s|@IMAGE_REF@|${REF}|g" disk_config/iso.toml > output/config.toml
+          # Any rootpw line makes the installer's account screens optional (see iso.toml), and an
+          # install without an account can't be signed in to.
+          if grep -qE '^[[:space:]]*rootpw' output/config.toml; then
+            echo "::error file=disk_config/iso.toml::rootpw in the kickstart would make creating an account optional"
+            exit 1
+          fi
           sudo podman run --rm --privileged --pull=newer \
             --security-opt label=type:unconfined_t \
             -v ./output/config.toml:/config.toml:ro \

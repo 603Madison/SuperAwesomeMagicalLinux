@@ -57,6 +57,10 @@ installer of sensible size. The procedure isn't done until both are green. Chang
 (it uses the last published image). The sandbox hasn't the disk for a local ISO; `just iso` builds
 one on a real machine.
 
+The installer must make people create an account (there's no first-run wizard to do it later):
+never put `rootpw` (even `--lock`) in `disk_config/iso.toml`, since the installer then treats an
+admin as already set up and lets the account screens be skipped. The ISO workflow refuses it.
+
 ## Building in a Claude cloud sandbox
 
 - Start Docker yourself: `dockerd > /tmp/dockerd.log 2>&1 &`.

@@ -1,12 +1,20 @@
 # Installer settings for bootc-image-builder's anaconda-iso. The workflow fills in @IMAGE_REF@.
 #
-# Giving our own kickstart keeps the installer interactive (you choose the disk), and the Users
-# module lets you create your account there, since this desktop has no first-run account wizard.
+# Giving our own kickstart keeps the installer interactive (you choose the disk); without one,
+# bootc-image-builder makes an unattended installer that wipes the first disk.
+#
+# Making an account is required: this desktop has no first-run account wizard, so an install
+# without one can't be signed in to. The installer insists on an administrator account (or a root
+# password) before it will start, but only while the kickstart says nothing about root: any
+# `rootpw` line, even `rootpw --lock`, counts to the installer as "an admin is already set up" and
+# makes the account screens optional. So there's no rootpw here; root stays locked by default.
+# The ISO workflow refuses to build if one appears.
+#
+# (bootc-image-builder adds the `bootc switch` below itself too; it points installed systems at
+# the published image so they update from it.)
 
 [customizations.installer.kickstart]
 contents = """
-rootpw --lock
-
 %post --erroronfail
 bootc switch --mutate-in-place --transport registry @IMAGE_REF@
 %end
