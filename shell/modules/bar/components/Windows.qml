@@ -22,7 +22,7 @@ StyledRect {
     readonly property string minimizedWorkspace: "special:minimized"
     readonly property HyprlandMonitor monitor: Hypr.monitorFor(screen)
     readonly property int wsId: monitor?.activeWorkspace?.id ?? Hypr.activeWsId
-    readonly property list<HyprlandToplevel> windows: Hypr.toplevels.values.filter(t => {
+    readonly property var windows: Hypr.toplevels.values.filter(t => {
         const ws = t.workspace;
         return ws && !Hypr.isToplevelIgnored(t) && (ws.id === root.wsId || ws.name === root.minimizedWorkspace);
     })
@@ -87,7 +87,7 @@ StyledRect {
 
                 CachingIconImage {
                     anchors.centerIn: parent
-                    implicitSize: Math.round(parent.width * 0.6)
+                    implicitSize: Math.round(parent.width * 0.68)
                     source: Icons.getAppIcon(item.modelData.lastIpcObject?.class ?? "", "application-x-executable")
                     opacity: item.minimized ? 0.4 : 1
 
