@@ -138,6 +138,15 @@ ColumnLayout {
                 }
             }
             DelegateChoice {
+                roleValue: "windows"
+                delegate: EntryWrapper {
+                    Windows {
+                        objectName: "taskbarWindows"
+                        screen: root.screen
+                    }
+                }
+            }
+            DelegateChoice {
                 roleValue: "activeWindow"
                 delegate: EntryWrapper {
                     ActiveWindow {

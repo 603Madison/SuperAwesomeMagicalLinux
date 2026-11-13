@@ -80,6 +80,9 @@ require("hyprland.rules")
 require("hyprland.gestures")
 require("hyprland.keybinds")
 
+-- A normal desktop: floating windows with title bars, minimize and maximize (./desktop.lua).
+require("desktop")
+
 -- Hyprland's own messages (config errors and the like) in Lexend too.
 hl.config({ misc = { font_family = "Lexend" } })
 

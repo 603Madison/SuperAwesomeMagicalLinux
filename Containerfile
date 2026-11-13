@@ -7,6 +7,9 @@
 
 ARG BASE_IMAGE=ghcr.io/ublue-os/base-main
 ARG FEDORA_VERSION=45
+# Hyprland, from the lionheartp/Hyprland COPR. Pinned, because the title bars plugin (stage 1c) is
+# built for exactly this version, and Caelestia's Hyprland config (DOTS_REV in build.sh) matches it.
+ARG HYPRLAND_VERSION=0.57.2
 
 # ---- Build context: the scripts, kept out of the final image ----
 FROM scratch AS ctx
@@ -30,9 +33,18 @@ RUN --mount=type=bind,from=ctx,source=/shell.sh,target=/ctx/shell.sh \
     --mount=type=tmpfs,dst=/tmp \
     /ctx/shell.sh
 
+# ---- Stage 1c: the window title bars, a Hyprland plugin built for exactly HYPRLAND_VERSION ----
+FROM ${BASE_IMAGE}:${FEDORA_VERSION} AS titlebars
+ARG HYPRLAND_VERSION
+RUN --mount=type=bind,from=ctx,source=/titlebars.sh,target=/ctx/titlebars.sh \
+    --mount=type=cache,dst=/var/cache/libdnf5 \
+    --mount=type=tmpfs,dst=/tmp \
+    HYPRLAND_VERSION="${HYPRLAND_VERSION}" /ctx/titlebars.sh
+
 # ---- Stage 2: the OS image ----
 FROM ${BASE_IMAGE}:${FEDORA_VERSION}
 ARG FEDORA_VERSION
+ARG HYPRLAND_VERSION
 ARG IMAGE_REF=ghcr.io/603madison/superawesomemagicallinux
 # Which releases of the family's apps to install (SuperAwesomeMagical Browser, Music, Email); empty
 # for the newest.
@@ -42,11 +54,12 @@ ARG EMAIL_TAG=
 
 COPY --from=deps /out /
 COPY --from=shell /out-shell /
+COPY --from=titlebars /out /
 RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=bind,source=system_files,target=/ctx-files \
     --mount=type=cache,dst=/var/cache/libdnf5 \
     --mount=type=tmpfs,dst=/tmp \
-    FEDORA_VERSION="${FEDORA_VERSION}" IMAGE_REF="${IMAGE_REF}" BROWSER_TAG="${BROWSER_TAG}" MUSIC_TAG="${MUSIC_TAG}" EMAIL_TAG="${EMAIL_TAG}" \
+    FEDORA_VERSION="${FEDORA_VERSION}" HYPRLAND_VERSION="${HYPRLAND_VERSION}" IMAGE_REF="${IMAGE_REF}" BROWSER_TAG="${BROWSER_TAG}" MUSIC_TAG="${MUSIC_TAG}" EMAIL_TAG="${EMAIL_TAG}" \
     /ctx/build.sh
 
 # podman leaves the dnf cache mount's (empty) folder behind; nothing in /var should ship.

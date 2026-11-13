@@ -99,6 +99,12 @@ check "entry config" test -f "$hypr/hyprland.lua"
 check "base config" test -f "$hypr/caelestia/variables.lua"
 check "polkit agent patched for Fedora" grep -q /usr/libexec/hyprpolkitagent "$hypr/caelestia/hyprland/execs.lua"
 check "start-shell wired up" grep -q superawesomemagical/start-shell "$hypr/caelestia/hyprland/execs.lua"
+plugin=/usr/lib64/hyprland/libsuperawesomemagical-titlebars.so
+check "title bars plugin installed" test -f "$plugin"
+check "title bars plugin built for this Hyprland" sh -c "[ \"\$(cat ${plugin%.so}.hyprland-version)\" = \"\$(rpm -q --qf %{VERSION} hyprland)\" ]"
+check "title bars plugin's libraries resolve" sh -c "! ldd '$plugin' | grep -q 'not found'"
+check "normal desktop config loaded" grep -q 'require("desktop")' "$hypr/hyprland.lua"
+check "GTK apps show minimize, maximize and close" grep -q "button-layout='appmenu:minimize,maximize,close'" /etc/dconf/db/local.d/00-superawesomemagical
 check "window groups in Lexend" grep -q 'font_family = "Lexend"' "$hypr/caelestia/hyprland/group.lua"
 check "no Arch-only qtengine" sh -c "! grep -q qtengine '$hypr/caelestia/hyprland/env.lua'"
 check "one Terminal in the launcher" sh -c 'grep -qx "Name=Terminal" /usr/share/applications/foot.desktop && grep -qx "NoDisplay=true" /usr/share/applications/footclient.desktop'

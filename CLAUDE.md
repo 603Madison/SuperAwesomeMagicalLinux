@@ -50,8 +50,25 @@ public domain or CC0/CC BY and credited in `CREDITS.md`.
   .rpm against its release's SHA256SUMS where there is one, and Email is left out until it has a
   release. Music and Email are built on Ubuntu 24.04 and link OpenSSL 3, so the image carries
   Fedora's `openssl3-libs` (Fedora 45's own is OpenSSL 4).
+- Hyprland itself: `HYPRLAND_VERSION` in the `Containerfile`, used by `build.sh` and by the title
+  bars plugin's stage (`build_files/titlebars.sh`), since a plugin only loads into the Hyprland it
+  was built against (`check-image` compares them). Bump it with `DOTS_REV`, and `PLUGINS_REV` in
+  `titlebars.sh` to the hyprland-plugins commit the COPR builds for that version.
 - Fonts: revisions and SHA-256s at the top of `build.sh`.
 - Fedora version: `FEDORA_VERSION` in the workflow, `Containerfile` and `Justfile`.
+
+## Windows
+
+A normal floating desktop (`system_files/usr/share/superawesomemagical/hypr/desktop.lua`, loaded
+after Caelestia's config): windows float, centred; title bars come from our build of hyprbars
+(`build_files/titlebars.sh`), patched to put a bar only on windows that asked for server-side
+decorations (GTK apps draw their own and never ask) and to turn apps' own minimize requests into
+Hyprland's minimize event, which `desktop.lua` handles by moving the window to
+`special:minimized`. The shell's taskbar (`shell/modules/bar/components/Windows.qml`) restores it.
+Plugin settings must sit inside `if hl.plugin.hyprbars then`: plugins load after the first read of
+the config (and `--verify-config` never loads them), so they'd be unknown keys there. Hyprland
+can't run in the sandbox (no GPU), so the title bars can't be screenshotted here; the taskbar can
+(`FAKE_WINDOWS=1` with the shell preview).
 
 ## Updates
 

@@ -20,12 +20,34 @@ MONITOR = {"id": 0, "name": MON, "description": "Headless", "make": "", "model":
            "transform": 0, "focused": True, "dpmsStatus": True, "vrr": False, "solitary": "0",
            "activelyTearing": False, "directScanoutTo": "0", "disabled": False,
            "currentFormat": "XRGB8888", "mirrorOf": "none", "availableModes": ["1920x1080@60.00Hz"]}
+
+def client(n, cls, title, ws_id, ws_name, x, y):
+    return {"address": f"0x{n:012x}", "mapped": True, "hidden": False, "at": [x, y], "size": [900, 600],
+            "workspace": {"id": ws_id, "name": ws_name}, "floating": True, "pseudo": False, "monitor": 0,
+            "class": cls, "title": title, "initialClass": cls, "initialTitle": title, "pid": 1000 + n,
+            "xwayland": False, "pinned": False, "fullscreen": 0, "fullscreenClient": 0, "grouped": [],
+            "tags": [], "swallowing": "0x0", "focusHistoryID": n, "inhibitingIdle": False}
+
+
+# FAKE_WINDOWS=1: a few open windows (one minimized), for screenshots of the taskbar.
+CLIENTS = [
+    client(1, "io.github._603madison.SuperAwesomeMagicalBrowser", "SuperAwesomeMagical Browser", 1, "1", 300, 120),
+    client(2, "foot", "Terminal", 1, "1", 520, 380),
+    client(3, "org.gnome.Nautilus", "Home", 1, "1", 700, 200),
+    client(4, "io.github._603madison.SuperAwesomeMagicalMusic", "SuperAwesomeMagicalMusic", -98, "special:minimized", 400, 300),
+] if os.environ.get("FAKE_WINDOWS") else []
+MINIMIZED_WS = {"id": -98, "name": "special:minimized", "monitor": MON, "monitorID": 0, "windows": 1,
+                "hasfullscreen": False, "lastwindow": CLIENTS[-1]["address"] if CLIENTS else "0x0",
+                "lastwindowtitle": "", "ispersistent": False}
+if CLIENTS:
+    WS.update({"windows": 3, "lastwindow": CLIENTS[0]["address"], "lastwindowtitle": CLIENTS[0]["title"]})
+
 ANSWERS = {
     "monitors": [MONITOR],
-    "workspaces": [WS],
+    "workspaces": [WS] + ([MINIMIZED_WS] if CLIENTS else []),
     "activeworkspace": WS,
-    "clients": [],
-    "activewindow": {},
+    "clients": CLIENTS,
+    "activewindow": CLIENTS[0] if CLIENTS else {},
     "layers": {},
     "devices": {"mice": [], "tablets": [], "touch": [], "switches": [], "keyboards": [
         {"address": "0x1", "name": "keyboard", "rules": "", "model": "", "layout": "us",

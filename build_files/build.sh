@@ -4,6 +4,7 @@
 set -xeuo pipefail
 
 FILES=/ctx-files
+: "${HYPRLAND_VERSION:?}" # from the Containerfile, which pins it
 IMAGE_REF=${IMAGE_REF:-ghcr.io/603madison/superawesomemagicallinux}
 
 # Caelestia's dotfiles (its Hyprland config), at the commit matched to the Hyprland 0.57 the COPR
@@ -38,7 +39,7 @@ echo "excludepkgs=quickshell*" >> "$HYPR_REPO"
 
 packages=(
     # The desktop: Hyprland and its portal, colour picker, polkit agent and screen recorder
-    hyprland xdg-desktop-portal-hyprland xdg-desktop-portal-gtk hyprland-guiutils
+    "hyprland-$HYPRLAND_VERSION" xdg-desktop-portal-hyprland xdg-desktop-portal-gtk hyprland-guiutils
     hyprpicker hyprpolkitagent gpu-screen-recorder
 
     # Sign-in screen

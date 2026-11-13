@@ -6,6 +6,7 @@
 #   SHOTS="dashboard:drawers toggle dashboard;lock:lock lock"   name:IPC call, ";"-separated
 #   (a call starting with ! is a shell command instead, e.g. "toast:!notify-send Hello")
 #   RHI=vulkan (default, lavapipe) or software; software loses the panels' backgrounds.
+#   FAKE_WINDOWS=1 pretends a few windows are open (one minimized), for the taskbar.
 #
 # `just shell-preview` runs it; see the Justfile.
 set -u
@@ -51,6 +52,6 @@ done
 EOF
 chmod 755 /tmp/inner.sh
 chown sam /out
-export SHOTS=${SHOTS:-} RHI=${RHI:-vulkan}
-su - sam -w SHOTS,RHI -c "dbus-run-session -- bash /tmp/inner.sh"
+export SHOTS=${SHOTS:-} RHI=${RHI:-vulkan} FAKE_WINDOWS=${FAKE_WINDOWS:-}
+su - sam -w SHOTS,RHI,FAKE_WINDOWS -c "dbus-run-session -- bash /tmp/inner.sh"
 ls /out

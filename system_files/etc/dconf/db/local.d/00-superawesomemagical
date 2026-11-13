@@ -14,7 +14,7 @@ font-hinting='slight'
 font-antialiasing='grayscale'
 
 [org/gnome/desktop/wm/preferences]
-button-layout='appmenu:close'
+button-layout='appmenu:minimize,maximize,close'
 
 [org/gnome/desktop/background]
 picture-uri='file:///usr/share/backgrounds/superawesomemagical/aurora.jpg'

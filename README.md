@@ -27,7 +27,7 @@ rounded cards.
 | | |
 |---|---|
 | Base | Fedora 45 via [Universal Blue](https://universal-blue.org)'s `base-main` (codecs, firmware, drivers) |
-| Desktop | [Hyprland](https://hypr.land) 0.57 with the SuperAwesomeMagical shell (`shell/`, built on Quickshell) |
+| Desktop | [Hyprland](https://hypr.land) 0.57, set up as a normal floating desktop with our title bars, and the SuperAwesomeMagical shell (`shell/`, built on Quickshell) |
 | Sign-in | SDDM with our own theme |
 | The family's apps | [SuperAwesomeMagical Browser](https://github.com/603Madison/SuperAwesomeMagicalBrowser) (Firefox in the family's look, tabs down the side), [Music](https://github.com/603Madison/SuperAwesomeMagicalMusic) (the desktop app for your Music server) and [Email](https://github.com/603Madison/SuperAwesomeMagicalEmail) (your mail, signed in with Authentik; the handler for mail links), each its newest release |
 | Apps | Files (Nautilus), Text Editor, Image Viewer, Terminal (foot, fish), mpv, Software (Flathub) |
@@ -73,16 +73,25 @@ Your settings live in your home folder, so updates bring the new desktop without
 
 ## Using it
 
-`Super` opens the launcher. Some others (all of them are in
-`/usr/share/superawesomemagical/hypr/caelestia/variables.lua`):
+Windows work as on any desktop: they open floating and overlap, with a title bar to drag them by
+(double-click it to maximize) and minimize, maximize and close buttons; drag any edge to resize.
+Apps that draw their own title bar (GTK apps like Files) keep theirs, with the same three buttons.
+The taskbar in the middle of the bar on the left has an icon for each window: click one to bring it
+to the front, click the one in front to minimize it, click a faded (minimized) one to bring it back,
+middle-click to close it.
+
+`Super` opens the launcher. Some others (the rest are in
+`/usr/share/superawesomemagical/hypr/caelestia/variables.lua` and `../desktop.lua`):
 
 | Keys | |
 |---|---|
 | `Super` | Launcher |
 | `Super + T` / `W` / `E` | Terminal / Browser / Files |
-| `Super + Q` | Close window |
+| `Alt + F4` or `Super + Q` | Close window |
+| `Alt + Tab` | Switch window |
+| `Super + Up` / `Down` | Maximize / minimize |
 | `Super + 1`–`0` | Switch workspace |
-| `Super + Alt + Space` | Float or tile the window |
+| `Super + Alt + Space` | Tile a window (or float it again) |
 | `Super + F` | Fullscreen |
 | `Super + N` | Sidebar (notifications, quick settings) |
 | `Super + L` | Lock (unlocks with a fingerprint too, once enrolled: `fprintd-enroll`) |
