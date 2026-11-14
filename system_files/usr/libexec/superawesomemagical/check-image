@@ -103,7 +103,7 @@ plugin=/usr/lib64/hyprland/libsuperawesomemagical-titlebars.so
 check "title bars plugin installed" test -f "$plugin"
 check "title bars plugin built for this Hyprland" sh -c "[ \"\$(cat ${plugin%.so}.hyprland-version)\" = \"\$(rpm -q --qf %{VERSION} hyprland)\" ]"
 check "title bars plugin's libraries resolve" sh -c "! ldd '$plugin' | grep -q 'not found'"
-check "title bars plugin snaps windows" grep -q samsnap "$plugin"
+check "title bars plugin snaps windows" grep -q "hl.plugin.hyprbars.snap: expected" "$plugin"
 check "shell draws the snap preview" grep -q SnapPreview /etc/xdg/quickshell/caelestia/shell.qml
 check "clock syncs (chrony on, Cloudflare and Fedora's pool, steps when out)" sh -c 'systemctl is-enabled -q chronyd && grep -qx "server time.cloudflare.com iburst nts" /etc/chrony.conf && grep -qx "makestep 1.0 -1" /etc/chrony.conf'
 check "Settings may set the time zone" test -f /usr/share/polkit-1/rules.d/50-superawesomemagical-time.rules
