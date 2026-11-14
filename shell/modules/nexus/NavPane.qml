@@ -39,13 +39,20 @@ ColumnLayout {
             property: "searchOpen"
             value: searchField.text.length > 0
         }
+
+        Keys.onReturnPressed: locations.openFirst()
+        Keys.onEnterPressed: locations.openFirst()
+        Keys.onEscapePressed: searchField.text = ""
     }
 
     NavLocations {
+        id: locations
+
         Layout.fillWidth: true
         Layout.fillHeight: true
         Layout.topMargin: -topMargin
         Layout.bottomMargin: -bottomMargin
         nState: root.nState
+        query: searchField.text
     }
 }

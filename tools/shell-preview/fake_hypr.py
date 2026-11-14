@@ -18,13 +18,14 @@ import threading
 MON = os.environ.get("FAKE_MONITOR", "HEADLESS-1")
 WS = {"id": 1, "name": "1", "monitor": MON, "monitorID": 0, "windows": 0,
       "hasfullscreen": False, "lastwindow": "0x0", "lastwindowtitle": "", "ispersistent": False}
-MONITOR = {"id": 0, "name": MON, "description": "Headless", "make": "", "model": "", "serial": "",
+MONITOR = {"id": 0, "name": MON, "description": "Headless Display 0001", "make": "Headless", "model": "Display", "serial": "0001",
            "width": 1920, "height": 1080, "physicalWidth": 0, "physicalHeight": 0,
            "refreshRate": 60.0, "x": 0, "y": 0, "activeWorkspace": {"id": 1, "name": "1"},
            "specialWorkspace": {"id": 0, "name": ""}, "reserved": [0, 0, 0, 0], "scale": 1.0,
            "transform": 0, "focused": True, "dpmsStatus": True, "vrr": False, "solitary": "0",
            "activelyTearing": False, "directScanoutTo": "0", "disabled": False,
-           "currentFormat": "XRGB8888", "mirrorOf": "none", "availableModes": ["1920x1080@60.00Hz"]}
+           "currentFormat": "XRGB8888", "mirrorOf": "none",
+           "availableModes": ["1920x1080@120.00Hz", "1920x1080@60.00Hz", "1680x1050@60.00Hz", "1280x800@60.00Hz"]}
 
 def client(n, cls, title, ws_id, ws_name, x, y):
     return {"address": f"0x{n:012x}", "mapped": True, "hidden": False, "at": [x, y], "size": [900, 600],

@@ -74,6 +74,24 @@ the config (and `--verify-config` never loads them), so they'd be unknown keys t
 can't run in the sandbox (no GPU), so the title bars can't be screenshotted here; the taskbar can
 (`FAKE_WINDOWS=1` with the shell preview).
 
+## Settings
+
+The Settings window is `shell/modules/nexus`. `PageRegistry.qml` lists the pages (with the setting
+names and keywords search looks through) and `PageCompRegistry.qml` their contents, in the same
+order: add a page to both. Search is in `navpane/NavLocations.qml`.
+
+What belongs to the desktop rather than the shell (displays, mouse/touchpad/keyboard, night light,
+light/dark by the time of day, time zone, pointer size) goes through `shell/services/DesktopSettings.qml`:
+it keeps `~/.config/caelestia/desktop.json`, applies Hyprland options and monitor rules live with
+`hyprctl eval`, and writes them to `~/.config/caelestia/hypr-settings.lua`, which `hyprland.lua`
+loads before `hypr-user.lua`. Hyprland's Lua config spells option names with underscores where
+hyprlang has hyphens (`tap_to_click`, not `tap-to-click`; `hyprctl descriptions` still reports the
+hyphens). `check-image` runs Hyprland's config check over a sample of everything Settings can write
+and fails if `InputPage.qml` uses an option the sample lacks, so add new ones there. Night light is
+`hyprsunset`, run by DesktopSettings while it's on. The clock is chrony (patched in `build.sh`), and
+a polkit rule (`50-superawesomemagical-time.rules`) lets administrators set the time zone and network
+time without a password.
+
 ## Updates
 
 Installed systems follow `ghcr.io/603madison/superawesomemagicallinux:latest`. The base already
@@ -151,3 +169,9 @@ admin as already set up and lets the account screens be skipped. The ISO workflo
 - Property names starting with `on` + a capital are read as signal handlers, so Material's
   `onSurface`-style token names can't be QML properties (the sign-in theme calls them `ink`).
 - Hidden or zero-size `ListView`s don't create delegates; use a `Repeater` to read model rows.
+- `Variants` keys its instances by value and can't take JS objects as model entries; give it
+  strings (and look the rest up), or use a `Repeater`. It doesn't give delegates an `index`.
+- A settings page (`PageBase`) takes only visual children; put `Process`, `Timer`, `FileView` and
+  the like inside its `ColumnLayout`.
+- A full-screen layer window that's mapped but empty can come out black under the preview's sway;
+  map it only while it has something to show (`SnapPreview.qml`).

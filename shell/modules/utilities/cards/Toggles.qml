@@ -132,6 +132,14 @@ StyledRect {
                     }
                 }
                 DelegateChoice {
+                    roleValue: "nightLight"
+                    delegate: Toggle {
+                        icon: "nightlight"
+                        checked: DesktopSettings.nightLight.enabled
+                        onClicked: DesktopSettings.nightLight.enabled = !DesktopSettings.nightLight.enabled
+                    }
+                }
+                DelegateChoice {
                     roleValue: "dnd"
                     delegate: Toggle {
                         icon: "notifications_off"

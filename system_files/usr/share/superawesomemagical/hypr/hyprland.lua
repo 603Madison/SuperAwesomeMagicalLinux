@@ -6,6 +6,8 @@
 --
 --   ~/.config/caelestia/hypr-vars.lua   return { windowRounding = 10, ... }  to change any of the
 --                                       variables in ./caelestia/variables.lua
+--   ~/.config/caelestia/hypr-settings.lua  what's chosen in Settings (displays, mouse, touchpad,
+--                                       keyboard); Settings writes it
 --   ~/.config/caelestia/hypr-user.lua   any extra Hyprland config (monitors, binds, rules, ...)
 --   ~/.config/hypr/scheme/current.lua   colours, written by `caelestia scheme set` (until then,
 --                                       ./scheme/current.lua: the SuperAwesomeMagical colours)
@@ -86,4 +88,5 @@ require("desktop")
 -- Hyprland's own messages (config errors and the like) in Lexend too.
 hl.config({ misc = { font_family = "Lexend" } })
 
+load_user("hypr-settings")
 load_user("hypr-user")

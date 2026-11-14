@@ -38,9 +38,10 @@ echo "excludepkgs=quickshell*" >> "$HYPR_REPO"
 ### Packages ######################################################################################
 
 packages=(
-    # The desktop: Hyprland and its portal, colour picker, polkit agent and screen recorder
+    # The desktop: Hyprland and its portal, colour picker, polkit agent, screen recorder and night
+    # light
     "hyprland-$HYPRLAND_VERSION" xdg-desktop-portal-hyprland xdg-desktop-portal-gtk hyprland-guiutils
-    hyprpicker hyprpolkitagent gpu-screen-recorder
+    hyprpicker hyprpolkitagent gpu-screen-recorder hyprsunset
 
     # Sign-in screen
     sddm sddm-wayland-generic

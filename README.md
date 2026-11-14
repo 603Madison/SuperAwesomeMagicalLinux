@@ -105,6 +105,23 @@ land before you let go, and dragging it away again gives it back its size.
 | `Super + V` | Clipboard history |
 | `Ctrl + Alt + Delete` | Session menu (log out, restart, shut down) |
 
+**Settings** (Settings in the launcher, or the gear in quick settings) has
+the rest, and its search box finds a setting by name ("resolution", "tap to click", "time zone"):
+
+- **Displays**: resolution, refresh rate, scale, orientation and position for each display (a change
+  goes back by itself after 15 seconds unless you keep it), brightness, and **night light**, which
+  warms the screen from sunset to sunrise or at set times (also in quick settings).
+- **Mouse & keyboard**: pointer speed and acceleration, natural scrolling, tap to click, two-finger
+  right-click, keyboard layouts and how to switch them, what Caps Lock does, key repeat.
+- **Power & battery**: power mode, battery health, a charge limit on laptops that have one
+  (Framework laptops do), and when the screen locks, turns off and the computer sleeps.
+- **Your account**, **Date & time** (network time, and the time zone set automatically to where you
+  are) and **Accessibility** (text size, pointer size, less motion).
+- **Wallpaper & style** can switch between light and dark at sunrise and sunset, or at set times.
+
+The clock keeps itself right from Cloudflare's time servers and Fedora's, and is put right at once
+whenever it's more than a second out.
+
 **Changing things.** Colours and wallpaper are in the shell's dashboard, or from a terminal:
 
 ```sh
@@ -115,8 +132,10 @@ caelestia scheme set -m light           # light mode
 ```
 
 Your own Hyprland changes go in `~/.config/caelestia/hypr-vars.lua` (settings) and
-`~/.config/caelestia/hypr-user.lua` (anything else); the shell's settings are in
-`~/.config/caelestia/shell.json`. Updates never touch these.
+`~/.config/caelestia/hypr-user.lua` (anything else, and it wins over what Settings chooses); the
+shell's settings are in `~/.config/caelestia/shell.json`, and Settings keeps the desktop's in
+`desktop.json` beside it, writing Hyprland's part to `hypr-settings.lua`. Updates never touch
+these.
 
 **Installing software.** Apps: the Software app (Flathub). Command-line and development tools: a
 `distrobox` container (`distrobox create`, then `distrobox enter`, and `dnf install` inside it).

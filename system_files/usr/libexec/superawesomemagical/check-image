@@ -14,7 +14,7 @@ check() { # description, command...
 
 echo "Programs"
 for cmd in Hyprland start-hyprland hyprctl quickshell caelestia sddm foot fish nautilus superawesomemagicalbrowser \
-    gnome-software hyprpicker grim slurp wl-copy cliphist fuzzel brightnessctl ddcutil; do
+    gnome-software hyprpicker hyprsunset grim slurp wl-copy cliphist fuzzel brightnessctl ddcutil chronyc timedatectl; do
     check "$cmd" command -v "$cmd"
 done
 check "hyprpolkitagent" test -x /usr/libexec/hyprpolkitagent
@@ -107,6 +107,7 @@ check "title bars plugin snaps windows" grep -q samsnap "$plugin"
 check "shell draws the snap preview" grep -q SnapPreview /etc/xdg/quickshell/caelestia/shell.qml
 check "clock syncs (chrony on, Cloudflare and Fedora's pool, steps when out)" sh -c 'systemctl is-enabled -q chronyd && grep -qx "server time.cloudflare.com iburst nts" /etc/chrony.conf && grep -qx "makestep 1.0 -1" /etc/chrony.conf'
 check "Settings may set the time zone" test -f /usr/share/polkit-1/rules.d/50-superawesomemagical-time.rules
+check "Settings in the launcher" grep -qx "Exec=qs -c caelestia ipc call nexus open" /usr/share/applications/superawesomemagical-settings.desktop
 check "normal desktop config loaded" grep -q 'require("desktop")' "$hypr/hyprland.lua"
 check "GTK apps show minimize, maximize and close" grep -q "button-layout='appmenu:minimize,maximize,close'" /etc/dconf/db/local.d/00-superawesomemagical
 check "window groups in Lexend" grep -q 'font_family = "Lexend"' "$hypr/caelestia/hyprland/group.lua"
@@ -124,6 +125,33 @@ if [ -e /run/.containerenv ] || [ -e /.dockerenv ]; then
             pass "Hyprland accepts the config"
         else
             fail "Hyprland rejects the config: $(tr '\n' ' ' <<<"$result")"
+        fi
+
+        # Again with everything Settings can write into hypr-settings.lua (the shell's
+        # DesktopSettings.qml, from the Displays and Mouse & keyboard pages), so a Hyprland that
+        # renames one of those options fails here rather than on someone's computer.
+        cat > /tmp/hypr-settings-sample.lua <<'EOF'
+hl.config({ input = { sensitivity = -0.35, accel_profile = "flat", natural_scroll = true,
+    left_handed = false, kb_layout = "us,de", kb_options = "grp:alt_shift_toggle,caps:escape",
+    repeat_delay = 300, repeat_rate = 40, numlock_by_default = true,
+    touchpad = { tap_to_click = false, natural_scroll = false, clickfinger_behavior = true,
+        disable_while_typing = true, scroll_factor = 0.5 } } })
+hl.monitor({ output = "desc:Make Model 0001", mode = "1920x1080@60.000", position = "auto-left",
+    scale = "1.25", transform = 1, vrr = 0, mirror = "", disabled = false })
+hl.monitor({ output = "DP-1", mirror = "eDP-1" })
+EOF
+        chmod 644 /tmp/hypr-settings-sample.lua
+        unlisted=$(grep -oh '"input:[a-z_:]*"' /etc/xdg/quickshell/caelestia/modules/nexus/pages/InputPage.qml |
+            tr -d '"' | sort -u | while read -r key; do
+                grep -q "${key##*:} = " /tmp/hypr-settings-sample.lua || echo "$key"
+            done)
+        check "every option Settings writes is in the sample" test -z "$unlisted"
+        result=$(su - hyprcheck -c "cp /tmp/hypr-settings-sample.lua ~/.config/caelestia/hypr-settings.lua;
+            XDG_RUNTIME_DIR=/tmp Hyprland --verify-config --config $hypr/hyprland.lua 2>&1; rm ~/.config/caelestia/hypr-settings.lua" | tail -5)
+        if grep -q "^config ok" <<<"$result"; then
+            pass "Hyprland accepts what Settings writes"
+        else
+            fail "Hyprland rejects what Settings writes: $(tr '\n' ' ' <<<"$result")"
         fi
     else
         fail "couldn't make an account to check the Hyprland config with"

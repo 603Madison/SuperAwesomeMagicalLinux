@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Settings
+Comment=Displays, mouse and keyboard, power, date and time, wallpaper and more
+Keywords=preferences;control;center;panel;display;resolution;scale;night;light;mouse;touchpad;keyboard;power;battery;time;zone;wifi;bluetooth;sound;
+Icon=preferences-system
+Exec=qs -c caelestia ipc call nexus open
+Categories=Settings;
+StartupNotify=false

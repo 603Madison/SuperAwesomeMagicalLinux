@@ -119,6 +119,14 @@ PageBase {
         }
 
         ToggleRow {
+            text: Tr.tr("Night light")
+            subtext: Tr.tr("Warmer colours at night (Settings, Displays)")
+            disabled: !Config.utilities.cards.quickToggles
+            checked: root.isToggleOn("nightLight")
+            onToggled: root.setToggleOn("nightLight", checked)
+        }
+
+        ToggleRow {
             text: Tr.tr("Game mode")
             subtext: Tr.tr("Toggle game mode")
             disabled: !Config.utilities.cards.quickToggles

@@ -191,10 +191,77 @@ PageBase {
         ToggleRow {
             Layout.topMargin: Tokens.spacing.extraSmall / 2 - parent.spacing
 
-            last: true
             text: Tr.tr("Dark theme")
+            subtext: DesktopSettings.theme.auto !== "off" ? Tr.tr("Switches by itself at the times below") : ""
             checked: !Colours.light
             onToggled: Colours.setMode(checked ? "dark" : "light")
+        }
+
+        // Light by day, dark by night (DesktopSettings switches it)
+        SelectRow {
+            Layout.topMargin: Tokens.spacing.extraSmall / 2 - parent.spacing
+
+            last: DesktopSettings.theme.auto !== "custom"
+            label: Tr.tr("Light and dark by the time of day")
+            subtext: DesktopSettings.theme.auto === "sun" ? Tr.tr("Light from %1, dark from %2 today").arg(DesktopSettings.sunrise).arg(DesktopSettings.sunset) : Tr.tr("Light by day, dark by night")
+            menuItems: [autoOff, autoSun, autoCustom]
+            active: menuItems.find(i => i.value === DesktopSettings.theme.auto) ?? autoOff
+            onSelected: item => {
+                DesktopSettings.theme.auto = item.value;
+                DesktopSettings.applyScheduledMode();
+            }
+
+            MenuItem {
+                id: autoOff
+
+                text: Tr.tr("Off")
+                value: "off"
+            }
+            MenuItem {
+                id: autoSun
+
+                text: Tr.tr("Sunrise and sunset")
+                value: "sun"
+            }
+            MenuItem {
+                id: autoCustom
+
+                text: Tr.tr("Set times")
+                value: "custom"
+            }
+        }
+
+        TextFieldRow {
+            Layout.topMargin: Tokens.spacing.extraSmall / 2 - parent.spacing
+
+            visible: DesktopSettings.theme.auto === "custom"
+            smallField: true
+            label: Tr.tr("Light from")
+            subtext: Tr.tr("24-hour time, like 07:00")
+            value: DesktopSettings.theme.lightFrom
+            onEditingFinished: v => {
+                if (/^([01]?\d|2[0-3]):[0-5]\d$/.test(v)) {
+                    DesktopSettings.theme.lightFrom = v;
+                    DesktopSettings.applyScheduledMode();
+                }
+            }
+        }
+
+        TextFieldRow {
+            Layout.topMargin: Tokens.spacing.extraSmall / 2 - parent.spacing
+
+            visible: DesktopSettings.theme.auto === "custom"
+            last: true
+            smallField: true
+            label: Tr.tr("Dark from")
+            subtext: Tr.tr("24-hour time, like 19:00")
+            value: DesktopSettings.theme.darkFrom
+            onEditingFinished: v => {
+                if (/^([01]?\d|2[0-3]):[0-5]\d$/.test(v)) {
+                    DesktopSettings.theme.darkFrom = v;
+                    DesktopSettings.applyScheduledMode();
+                }
+            }
         }
     }
 }

@@ -93,7 +93,57 @@ QtObject {
             }
         },
 
+        // This computer
+        Component {
+            // Displays
+            StackPage {
+                Component {
+                    DisplaysPage {}
+                }
+            }
+        },
+        Component {
+            // Mouse & keyboard
+            StackPage {
+                Component {
+                    InputPage {}
+                }
+            }
+        },
+        Component {
+            // Power & battery
+            StackPage {
+                Component {
+                    PowerPage {}
+                }
+            }
+        },
+
         // System
+        Component {
+            // Your account
+            StackPage {
+                Component {
+                    AccountPage {}
+                }
+            }
+        },
+        Component {
+            // Date & time
+            StackPage {
+                Component {
+                    DateTimePage {}
+                }
+            }
+        },
+        Component {
+            // Accessibility
+            StackPage {
+                Component {
+                    AccessibilityPage {}
+                }
+            }
+        },
         Component {
             // Updates
             StackPage {
