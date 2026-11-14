@@ -233,6 +233,27 @@ chmod 0600 "/usr/lib/modules/$kver/initramfs.img"
 ### System settings ###############################################################################
 
 systemctl enable sddm.service tuned.service tuned-ppd.service
+
+# The clock. Fedora's chrony puts a clock that's out right at once only in its first three updates;
+# after that it eases it over, which takes hours when it's out by minutes (a hardware clock kept in
+# local time, a long suspend). Put it right whenever it's more than a second out instead, as other
+# desktops do, and ask Cloudflare's time servers (authenticated, with NTS) beside Fedora's pool.
+python3 - <<'EOF'
+import sys
+from pathlib import Path
+
+path = Path("/etc/chrony.conf")
+text = path.read_text()
+for old, new in [
+    ("pool 2.fedora.pool.ntp.org iburst\n", "server time.cloudflare.com iburst nts\npool 2.fedora.pool.ntp.org iburst\n"),
+    ("makestep 1.0 3\n", "makestep 1.0 -1\n"),
+]:
+    if text.count(old) != 1:
+        sys.exit(f"/etc/chrony.conf no longer has {old!r}; fix the time patch in build.sh")
+    text = text.replace(old, new)
+path.write_text(text)
+EOF
+systemctl enable chronyd.service
 systemctl set-default graphical.target
 # The "update ready, restart?" notification, for everyone who signs in.
 systemctl --global enable superawesomemagical-update-notify.timer

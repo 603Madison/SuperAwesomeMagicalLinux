@@ -80,6 +80,10 @@ The taskbar in the middle of the bar on the left has an icon for each window: cl
 to the front, click the one in front to minimize it, click a faded (minimized) one to bring it back,
 middle-click to close it.
 
+Snapping works as on Windows: drag a window to the left or right edge of the screen to fill that
+half, to the top to fill the screen, or into a corner for a quarter. An outline shows where it will
+land before you let go, and dragging it away again gives it back its size.
+
 `Super` opens the launcher. Some others (the rest are in
 `/usr/share/superawesomemagical/hypr/caelestia/variables.lua` and `../desktop.lua`):
 
@@ -89,7 +93,9 @@ middle-click to close it.
 | `Super + T` / `W` / `E` | Terminal / Browser / Files |
 | `Alt + F4` or `Super + Q` | Close window |
 | `Alt + Tab` | Switch window |
-| `Super + Up` / `Down` | Maximize / minimize |
+| `Super + Left` / `Right` | Snap to the left / right half |
+| `Super + Up` | Maximize |
+| `Super + Down` | Unsnap, or minimize |
 | `Super + 1`–`0` | Switch workspace |
 | `Super + Alt + Space` | Tile a window (or float it again) |
 | `Super + F` | Fullscreen |

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Stage 1c of the image build: the window title bars, a Hyprland plugin. It's Hyprland's own
-# hyprbars with two changes of ours, built against the exact Hyprland the image ships (plugins only
-# load into the Hyprland they were built for), into /out.
+# Stage 1c of the image build: the window title bars and snapping, a Hyprland plugin. It's
+# Hyprland's own hyprbars with changes of ours, built against the exact Hyprland the image ships
+# (plugins only load into the Hyprland they were built for), into /out.
 #
 #   - A bar only on windows that want the compositor to draw one: Wayland apps that ask for
 #     server-side decorations (Qt apps, the terminal, Chromium-based apps; GTK apps draw their own
@@ -10,6 +10,7 @@
 #   - Hyprland ignores an app's own minimize request (the minimize button in a GTK title bar); it's
 #     passed on as Hyprland's minimize event, which the desktop's config (hypr/desktop.lua) handles
 #     the same way as the title bars' and the taskbar's.
+#   - Snapping, as Windows' Aero Snap: snap.cpp beside this script.
 set -xeuo pipefail
 
 : "${HYPRLAND_VERSION:?}"
@@ -42,7 +43,13 @@ patches = [
 #include <hyprland/src/protocols/XDGShell.hpp>
 #include <hyprland/src/protocols/core/Compositor.hpp>
 #include <unordered_map>
+
+// SuperAwesomeMagicalLinux: snapping (snap.cpp).
+void samSnapInit(HANDLE handle);
+void samSnapExit();
 """),
+    ("    HyprlandAPI::reloadConfig();\n", "    samSnapInit(PHANDLE);\n    HyprlandAPI::reloadConfig();\n"),
+    ("APICALL EXPORT void PLUGIN_EXIT() {\n", "APICALL EXPORT void PLUGIN_EXIT() {\n    samSnapExit();\n"),
     ("static void onNewWindow(PHLWINDOW window) {\n    if (true) {\n", """// SuperAwesomeMagicalLinux: which apps asked for server-side decorations is only kept in the
 // protocol's private table, so its header is read here, after every other header (so nothing else
 // is affected), with private made public.
@@ -93,7 +100,8 @@ for old, new in patches:
 path.write_text(text)
 EOF
 
-make all
+cp /ctx/titlebars/snap.cpp .
+make all SRC="main.cpp barDeco.cpp BarPassElement.cpp snap.cpp"
 install -Dm755 hyprbars.so "$OUT/usr/lib64/hyprland/libsuperawesomemagical-titlebars.so"
 install -Dm644 ../LICENSE "$OUT/usr/share/licenses/superawesomemagical/titlebars/LICENSE"
 echo "$HYPRLAND_VERSION" > "$OUT/usr/lib64/hyprland/libsuperawesomemagical-titlebars.hyprland-version"

@@ -4,10 +4,15 @@
 Answers the shell's requests on $XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket.sock
 with one focused monitor (named like sway's output) and one workspace, keeps .socket2.sock (the
 event stream) open, and logs every request to /out/hypr-requests.log.
+
+    python3 fake_hypr.py emit 'samsnap>>10,60,940,1010'
+
+sends an event to the shell (a SHOTS "!" command can), as if Hyprland had.
 """
 import json
 import os
 import socket
+import sys
 import threading
 
 MON = os.environ.get("FAKE_MONITOR", "HEADLESS-1")
@@ -58,7 +63,16 @@ ANSWERS = {
 }
 
 base = os.path.join(os.environ["XDG_RUNTIME_DIR"], "hypr", os.environ["HYPRLAND_INSTANCE_SIGNATURE"])
+
+if sys.argv[1:2] == ["emit"]:
+    with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as c:
+        c.connect(os.path.join(base, ".socket.sock"))
+        c.sendall(("fake-event " + sys.argv[2]).encode())
+        c.recv(16)
+    sys.exit()
+
 os.makedirs(base, exist_ok=True)
+events = []  # the shell's connections to the event stream
 log = open("/out/hypr-requests.log", "a", buffering=1)
 
 
@@ -71,6 +85,13 @@ def answer(req: str) -> bytes:
     word = cmd.split()[0] if cmd else ""
     if word in ANSWERS:
         return json.dumps(ANSWERS[word]).encode()
+    if word == "fake-event":
+        for c in list(events):
+            try:
+                c.sendall((cmd.split(" ", 1)[1] + "\n").encode())
+            except OSError:
+                events.remove(c)
+        return b"ok"
     if word == "getoption":
         return json.dumps({"option": cmd.split()[-1], "int": 0, "set": False}).encode()
     return b"ok"
@@ -95,10 +116,9 @@ def serve_events():
     s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     s.bind(path)
     s.listen(16)
-    held = []
     while True:
         c, _ = s.accept()
-        held.append(c)  # never send anything; just keep it open
+        events.append(c)  # kept open; "emit" sends events down it
 
 
 threading.Thread(target=serve_events, daemon=True).start()

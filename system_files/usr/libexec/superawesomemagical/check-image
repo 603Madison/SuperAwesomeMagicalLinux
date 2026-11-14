@@ -103,6 +103,10 @@ plugin=/usr/lib64/hyprland/libsuperawesomemagical-titlebars.so
 check "title bars plugin installed" test -f "$plugin"
 check "title bars plugin built for this Hyprland" sh -c "[ \"\$(cat ${plugin%.so}.hyprland-version)\" = \"\$(rpm -q --qf %{VERSION} hyprland)\" ]"
 check "title bars plugin's libraries resolve" sh -c "! ldd '$plugin' | grep -q 'not found'"
+check "title bars plugin snaps windows" grep -q samsnap "$plugin"
+check "shell draws the snap preview" grep -q SnapPreview /etc/xdg/quickshell/caelestia/shell.qml
+check "clock syncs (chrony on, Cloudflare and Fedora's pool, steps when out)" sh -c 'systemctl is-enabled -q chronyd && grep -qx "server time.cloudflare.com iburst nts" /etc/chrony.conf && grep -qx "makestep 1.0 -1" /etc/chrony.conf'
+check "Settings may set the time zone" test -f /usr/share/polkit-1/rules.d/50-superawesomemagical-time.rules
 check "normal desktop config loaded" grep -q 'require("desktop")' "$hypr/hyprland.lua"
 check "GTK apps show minimize, maximize and close" grep -q "button-layout='appmenu:minimize,maximize,close'" /etc/dconf/db/local.d/00-superawesomemagical
 check "window groups in Lexend" grep -q 'font_family = "Lexend"' "$hypr/caelestia/hyprland/group.lua"

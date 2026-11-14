@@ -7,8 +7,13 @@
 -- shell's bar brings it back. Apps with their own title bars (GTK apps) show the same three buttons
 -- (the dconf button layout), and their minimize works the same way.
 --
--- Keys on top of the usual ones: Alt+F4 closes, Alt+Tab switches windows, Super+Up maximizes,
--- Super+Down minimizes. Super+Alt+Space still tiles a window, for anyone who wants that.
+-- Snapping, as Windows' Aero Snap: drag a window to the left or right edge of the screen to fill
+-- that half, to the top to fill the screen, into a corner for a quarter; drag it away and it gets
+-- its size back. The shell shows where it will land. (The title bars plugin does this; snap.cpp.)
+--
+-- Keys on top of the usual ones: Alt+F4 closes, Alt+Tab switches windows, Super+Left/Right snap to
+-- a half, Super+Up maximizes, Super+Down puts a snapped window back (or minimizes one that isn't).
+-- Super+Alt+Space still tiles a window, for anyone who wants that.
 --
 -- To change any of it, override it in ~/.config/caelestia/hypr-user.lua.
 
@@ -68,14 +73,28 @@ local maximize = hl.dsp.window.fullscreen({ mode = "maximized", action = "toggle
 
 hl.bind("ALT + F4", hl.dsp.window.close())
 hl.bind("SUPER + Up", maximize)
-hl.bind("SUPER + Down", function() minimize(hl.get_active_window()) end)
+-- The title bars plugin snaps; it's only there once Hyprland has loaded it, after reading this file.
+local function snap(zone)
+    return function()
+        if hl.plugin.hyprbars then
+            hl.plugin.hyprbars.snap(zone)
+        end
+    end
+end
+hl.bind("SUPER + Left", snap("left"))
+hl.bind("SUPER + Right", snap("right"))
+hl.bind("SUPER + Down", function()
+    if not (hl.plugin.hyprbars and hl.plugin.hyprbars.unsnap()) then
+        minimize(hl.get_active_window())
+    end
+end)
 -- Alt+Tab already cycles windows (Caelestia's binds); bring the one it lands on to the front.
 hl.bind("ALT + TAB", hl.dsp.window.bring_to_top())
 hl.bind("SHIFT + ALT + TAB", hl.dsp.window.bring_to_top())
 
 ---- Title bars -------------------------------------------------------------------------------------
 
--- Our build of Hyprland's hyprbars (build_files/titlebars.sh). Hyprland loads plugins after reading
+-- Our build of Hyprland's hyprbars (build_files/titlebars/), which also snaps. Hyprland loads plugins after reading
 -- the config and then reads it again, so its settings only apply on that second read.
 hl.plugin.load("/usr/lib64/hyprland/libsuperawesomemagical-titlebars.so")
 

@@ -33,14 +33,14 @@ RUN --mount=type=bind,from=ctx,source=/shell.sh,target=/ctx/shell.sh \
     --mount=type=tmpfs,dst=/tmp \
     /ctx/shell.sh
 
-# ---- Stage 1c: the window title bars, a Hyprland plugin built for exactly HYPRLAND_VERSION ----
+# ---- Stage 1c: the window title bars and snapping, a Hyprland plugin built for exactly HYPRLAND_VERSION ----
 FROM ${BASE_IMAGE}:${FEDORA_VERSION} AS titlebars
 ARG HYPRLAND_VERSION
 # (Its own dnf cache: this stage builds alongside stage 1a, and two dnf runs can't share one.)
-RUN --mount=type=bind,from=ctx,source=/titlebars.sh,target=/ctx/titlebars.sh \
+RUN --mount=type=bind,from=ctx,source=/titlebars,target=/ctx/titlebars \
     --mount=type=cache,id=dnf-titlebars,dst=/var/cache/libdnf5 \
     --mount=type=tmpfs,dst=/tmp \
-    HYPRLAND_VERSION="${HYPRLAND_VERSION}" /ctx/titlebars.sh
+    HYPRLAND_VERSION="${HYPRLAND_VERSION}" /ctx/titlebars/build.sh
 
 # ---- Stage 2: the OS image ----
 FROM ${BASE_IMAGE}:${FEDORA_VERSION}
