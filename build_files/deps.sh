@@ -11,7 +11,7 @@ set -xeuo pipefail
 
 QUICKSHELL_REV=2d3b3e9c70ef380dff751b61d334dc88df016c29 # pinned by Caelestia shell v2.5.0's flake.lock
 M3SHAPES_REV=32ad9ce328bb77ed349b40a3be10ee9ea610b8ab   # pinned by Caelestia shell v2.5.0's flake.lock
-LIBCAVA_REV=f4b69943ea7fecbbeec97fac8e73af03b39be499    # LukashonakV/cava 0.10.7
+LIBCAVA_REV=f03278ef9e5e7948fb206453d2f02758f8db216c    # LukashonakV/cava 1.0.0
 
 OUT=/out
 # Compiled on disk, not in /tmp: /tmp here is a RAM-backed tmpfs, and on GitHub's runners podman caps
