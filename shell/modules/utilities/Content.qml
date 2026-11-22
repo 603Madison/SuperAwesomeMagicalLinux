@@ -5,6 +5,7 @@ import QtQuick
 import QtQuick.Layouts
 import Caelestia.Config
 import qs.components
+import qs.services
 import qs.modules.bar.popouts as BarPopouts
 
 Item {
@@ -15,8 +16,8 @@ Item {
     required property BarPopouts.Wrapper popouts
     required property matrix4x4 deformMatrix
 
-    readonly property int enabledCards: (idleInhibit.active ? 1 : 0) + (record.active ? 1 : 0) + (toggles.active ? 1 : 0)
-    readonly property real nonAnimHeight: ((idleInhibit.item as IdleInhibit)?.nonAnimHeight ?? 0) + ((record.item as Record)?.nonAnimHeight ?? 0) + ((toggles.item as Toggles)?.implicitHeight ?? 0) + layout.spacing * Math.max(0, enabledCards - 1)
+    readonly property int enabledCards: (devices.active ? 1 : 0) + (idleInhibit.active ? 1 : 0) + (record.active ? 1 : 0) + (toggles.active ? 1 : 0)
+    readonly property real nonAnimHeight: ((devices.item as Devices)?.nonAnimHeight ?? 0) + ((idleInhibit.item as IdleInhibit)?.nonAnimHeight ?? 0) + ((record.item as Record)?.nonAnimHeight ?? 0) + ((toggles.item as Toggles)?.implicitHeight ?? 0) + layout.spacing * Math.max(0, enabledCards - 1)
 
     implicitWidth: layout.implicitWidth
     implicitHeight: layout.implicitHeight
@@ -26,6 +27,19 @@ Item {
 
         anchors.fill: parent
         spacing: Tokens.spacing.medium
+
+        // Your other devices, for people signed in to a SuperAwesomeMagical account who have one.
+        Loader {
+            id: devices
+
+            Layout.fillWidth: true
+            active: Orchestrator.agentRunning && Orchestrator.signedIn && Orchestrator.otherDevices.length > 0
+            visible: active
+
+            sourceComponent: Devices {
+                objectName: "utilitiesDevices"
+            }
+        }
 
         Loader {
             id: idleInhibit

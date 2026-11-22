@@ -1,0 +1,94 @@
+#!/usr/bin/env python3
+"""A stand-in for the Orchestrator's agent command (sam-orchestrator), for screenshotting Settings
+(Your account, Your devices) and the Devices card without an orchestrator server. run.sh puts it on
+the PATH ahead of the real one when FAKE_ORCHESTRATOR is set:
+
+    FAKE_ORCHESTRATOR=signed-out | signing-in | failed | signed-in
+
+It answers the commands the shell's services/Orchestrator.qml runs with JSON shaped as the real
+agent's (SAM-DeviceOrchestrator's linux/src/daemon.rs and docs/PROTOCOL.md), accepts the ones that
+do something (ring, send-clipboard, settings <key> <value>, sign-in, sign-out) without doing it, and
+`daemon` holds the agent's name on the session bus, as the real one does while it runs.
+"""
+import json
+import os
+import sys
+import time
+
+STATE = os.environ.get("FAKE_ORCHESTRATOR", "signed-out")
+SERVER = "https://orchestrator.example.com"
+NOW = int(time.time() * 1000)
+signed_in = STATE == "signed-in"
+
+status = {
+    "signedIn": signed_in,
+    "server": SERVER if STATE != "signed-out" else "",
+    "username": "sam" if signed_in else "",
+    "displayName": "Sam Rivera" if signed_in else "",
+    "connected": signed_in,
+    "device": {"id": "dev-desk" if signed_in else "", "name": "Sam's desktop"},
+    "signingIn": STATE == "signing-in",
+}
+if STATE == "signing-in":
+    status["signInUrl"] = SERVER + "/connect-app?code_challenge=abc&port=40123"
+    status["pairingCode"] = "249 228"
+if STATE == "failed":
+    status["error"] = "Couldn't reach orchestrator.example.com. Check the address and that this computer is online."
+
+CAPABILITIES = ["notifications", "clipboard", "links", "ring", "activity", "media"]
+devices = [
+    {"id": "dev-desk", "name": "Sam's desktop", "kind": "LINUX", "model": "SuperAwesomeMagicalLinux", "publicKey": "",
+     "capabilities": CAPABILITIES, "online": True, "lastSeenAt": NOW, "createdAt": NOW - 40 * 86400000, "current": True},
+    {"id": "dev-pixel", "name": "Pixel 9", "kind": "ANDROID", "model": "Google Pixel 9", "publicKey": "",
+     "capabilities": CAPABILITIES, "online": True, "lastSeenAt": NOW, "createdAt": NOW - 30 * 86400000,
+     "battery": {"level": 81, "charging": True}, "current": False},
+    {"id": "dev-laptop", "name": "Laptop", "kind": "LINUX", "model": "Framework 13", "publicKey": "",
+     "capabilities": CAPABILITIES, "online": False, "lastSeenAt": NOW - 2 * 86400000, "createdAt": NOW - 90 * 86400000,
+     "battery": {"level": 46, "charging": False}, "current": False},
+]
+apps = [
+    {"id": "music", "name": "Music", "url": "https://music.example.com"},
+    {"id": "email", "name": "Email", "url": "https://mail.example.com"},
+    {"id": "video", "name": "Video", "url": "https://video.example.com"},
+]
+activities = [
+    {"device": "dev-pixel", "deviceName": "Pixel 9", "app": "music", "title": "Northern Lights",
+     "detail": "Aurora Season", "url": "https://music.example.com/album/aurora-season", "at": NOW - 60000},
+]
+settings = {"notificationsOut": True, "notificationsIn": True, "clipboard": True, "links": False, "neverMirror": []}
+
+
+def daemon():
+    """Own the agent's bus name, so the shell sees the agent as running."""
+    from gi.repository import Gio, GLib
+    Gio.bus_own_name(Gio.BusType.SESSION, "app.superawesomemagical.Orchestrator", Gio.BusNameOwnerFlags.NONE, None, None, None)
+    GLib.MainLoop().run()
+
+
+def main():
+    args = [a for a in sys.argv[1:] if a not in ("--json", "--")]
+    command = args[0] if args else ""
+    if command == "--version":
+        print("sam-orchestrator 0.0.0 (the preview's stand-in)")
+    elif command == "daemon":
+        daemon()
+    elif command == "status":
+        print(json.dumps(status))
+    elif command == "settings":
+        print(json.dumps(settings))
+    elif command in ("devices", "apps", "activities"):
+        if not signed_in:
+            sys.exit("Nobody's signed in on this computer.")
+        print(json.dumps({"devices": devices, "apps": apps, "activities": activities}[command]))
+    elif command in ("ring", "send-clipboard", "send-link", "sign-out", "autostart"):
+        pass
+    elif command == "sign-in":
+        if STATE == "failed":
+            sys.exit(status["error"])
+        if STATE == "signing-in":
+            time.sleep(300)  # as the real one, which waits for the browser
+    else:
+        sys.exit(f"the stand-in doesn't know {command!r}")
+
+
+main()

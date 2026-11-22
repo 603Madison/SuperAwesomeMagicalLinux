@@ -85,10 +85,19 @@ QtObject {
             id: "account",
             label: Tr.tr("Your account"),
             icon: "account_circle",
-            description: Tr.tr("Picture, password, fingerprints"),
+            description: Tr.tr("Picture, password, sign-in for your apps"),
             category: "system",
-            settings: [Tr.tr("Change your picture"), Tr.tr("Change your password"), Tr.tr("Add a fingerprint"), Tr.tr("Remove your fingerprints")],
-            keywords: "user profile photo avatar face login sign in password fingerprint reader unlock security"
+            settings: [Tr.tr("Change your picture"), Tr.tr("Change your password"), Tr.tr("Add a fingerprint"), Tr.tr("Remove your fingerprints"), Tr.tr("SuperAwesomeMagical account"), Tr.tr("Sign in"), Tr.tr("Sign out")],
+            keywords: "user profile photo avatar face login sign in sign out password fingerprint reader unlock security superawesomemagical orchestrator server single sign-on sso pairing code music email apps"
+        },
+        {
+            id: "yourdevices",
+            label: Tr.tr("Your devices"),
+            icon: "devices",
+            description: Tr.tr("Your phone and computers, together"),
+            category: "system",
+            settings: [Tr.tr("Carry on"), Tr.tr("Ring"), Tr.tr("Send clipboard"), Tr.tr("Send notifications to my other devices"), Tr.tr("Show my other devices’ notifications here"), Tr.tr("Accept the clipboard"), Tr.tr("Open links sent here")],
+            keywords: "sign in account orchestrator devices phone tablet computer android notifications mirror clipboard copy paste links ring find my phone lost battery hand off handoff continue carry on sharing superawesomemagical"
         },
         {
             id: "datetime",

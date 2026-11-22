@@ -42,14 +42,20 @@ public domain or CC0/CC BY and credited in `CREDITS.md`.
   API still moves; `check-image` runs Hyprland's own config check, so a mismatch fails CI). `build.sh` patches a few lines of the dotfiles and fails loudly if they
   no longer match; fix the patch list rather than loosening it.
 - The family's apps (SuperAwesomeMagical Browser in place of Fedora's Firefox, the Music and
-  Email desktop apps): not pinned on purpose. They're the owner's own releases, and the browser's
-  carry Firefox's security fixes. CI looks up each one's newest release
-  (`build_files/newest-release.sh`, which reads where `releases/latest/download/` redirects: the
-  sandbox's proxy blocks the release pages), passes it as `BROWSER_TAG`/`MUSIC_TAG`/`EMAIL_TAG` and
-  labels the image with it; `follow-apps.yml` rebuilds when one is behind. `build.sh` checks each
-  .rpm against its release's SHA256SUMS where there is one, and Email is left out until it has a
-  release. Music and Email are built on Ubuntu 24.04 and link OpenSSL 3, so the image carries
-  Fedora's `openssl3-libs` (Fedora 45's own is OpenSSL 4).
+  Email desktop apps, SuperAwesomeMagicalOrchestrator's agent): not pinned on purpose. They're the
+  owner's own releases, and the browser's carry Firefox's security fixes. CI looks up each one's
+  newest release (`build_files/newest-release.sh`, which reads where `releases/latest/download/`
+  redirects: the sandbox's proxy blocks the release pages), passes it as
+  `BROWSER_TAG`/`MUSIC_TAG`/`EMAIL_TAG`/`ORCHESTRATOR_TAG` and labels the image with it
+  (`io.github.603madison.superawesomemagical<app>`); `follow-apps.yml` rebuilds when one is behind.
+  Both workflows list the apps as `name=repository`, since the Orchestrator's repository is
+  `SAM-DeviceOrchestrator` and its .rpm `SuperAwesomeMagicalOrchestrator-Linux-<tag>-x86_64.rpm`.
+  `build.sh` checks each .rpm against its release's SHA256SUMS where there is one. Email and the
+  Orchestrator's agent are left out while no release of theirs can be seen (a repository that's
+  still private looks the same as one with no release: 404), and come in by themselves once one
+  can; `check-image` and Settings both cope with the agent not being there. Music and Email are
+  built on Ubuntu 24.04 and link OpenSSL 3, so the image carries Fedora's `openssl3-libs` (Fedora
+  45's own is OpenSSL 4); the agent links only glibc.
 - Hyprland itself: `HYPRLAND_VERSION` in the `Containerfile`, used by `build.sh` and by the title
   bars plugin's stage (`build_files/titlebars/build.sh`), since a plugin only loads into the Hyprland it
   was built against (`check-image` compares them). Bump it with `DOTS_REV`, and `PLUGINS_REV` in
@@ -91,6 +97,28 @@ and fails if `InputPage.qml` uses an option the sample lacks, so add new ones th
 `hyprsunset`, run by DesktopSettings while it's on. The clock is chrony (patched in `build.sh`), and
 a polkit rule (`50-superawesomemagical-time.rules`) lets administrators set the time zone and network
 time without a password.
+
+## One sign-in, and your devices (SuperAwesomeMagicalOrchestrator)
+
+The agent (`sam-orchestrator`, from SAM-DeviceOrchestrator's release; that repository's
+`docs/PROTOCOL.md` and `linux/README.md` are the contract) is a user service the session bus starts
+when asked, `app.superawesomemagical.Orchestrator`. Its package's XDG autostart entry isn't run by a
+plain Hyprland session, so `start-shell` runs `sam-orchestrator autostart` (nothing unless someone's
+signed in). Music's and Email's desktop apps ask it for their sign-in tickets by themselves.
+
+The shell's side is `shell/services/Orchestrator.qml`. Quickshell can't call D-Bus methods, so it
+runs `sam-orchestrator … --json` (always as an argument list, with `--` before a device id or an
+address: those come from other devices and the server) and watches `gdbus monitor` on the agent's
+name for whether it's running and for its `Changed`/`ActivitiesChanged` signals. It only asks the
+agent anything while the agent is already running or a Settings page holds `Orchestrator.refs`, so
+the agent isn't started for people who don't use it. Addresses from outside (a carry-on's, an app's)
+open only through `Orchestrator.open`, which keeps the agent's own rule: http(s) or one of the
+family's schemes. Settings: the sign-in (server address, pairing code, sign out) is a section of
+Your account (`AccountPage.qml`); devices, carry on, the family's apps and the sharing toggles are
+Your devices (`YourDevicesPage.qml`, page id `yourdevices`; `devices` is Bluetooth's). The quick
+settings panel shows a Devices card (`modules/utilities/cards/Devices.qml`) to people who are signed
+in and have another device. The agent's command has no rename or remove for a device, so Settings
+has none either; that's done on the orchestrator's web page.
 
 ## Updates
 
@@ -161,6 +189,11 @@ admin as already set up and lets the account screens be skipped. The ISO workflo
     -v /tmp/shots:/out localhost/superawesomemagicallinux bash /preview/run.sh
   ```
   Mounting `shell/` shows QML edits without a rebuild; C++ (config defaults) needs one.
+  Settings opens on a page with `nexus openPage <id>`; as a shot it needs the `!` form and the
+  window before it closed (`run.sh`'s header has the line). `-e FAKE_ORCHESTRATOR=signed-out`
+  (or `signing-in`, `failed`, `signed-in`) swaps the Orchestrator's agent for
+  `tools/shell-preview/fake-sam-orchestrator`, which answers with canned devices, apps and a
+  carry-on shaped as the real agent's; keep it in step with the agent's JSON.
 - The image is ~12 GB unpacked on a ~10 GB base and the sandbox's disk allowance is ~30 GB: delete
   old images and run `docker builder prune -f` between builds, and keep the stage 1 cache.
 

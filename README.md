@@ -29,7 +29,7 @@ rounded cards.
 | Base | Fedora 45 via [Universal Blue](https://universal-blue.org)'s `base-main` (codecs, firmware, drivers) |
 | Desktop | [Hyprland](https://hypr.land) 0.57, set up as a normal floating desktop with our title bars, and the SuperAwesomeMagical shell (`shell/`, built on Quickshell) |
 | Sign-in | SDDM with our own theme |
-| The family's apps | [SuperAwesomeMagical Browser](https://github.com/603Madison/SuperAwesomeMagicalBrowser) (Firefox in the family's look, tabs down the side), [Music](https://github.com/603Madison/SuperAwesomeMagicalMusic) (the desktop app for your Music server) and [Email](https://github.com/603Madison/SuperAwesomeMagicalEmail) (your mail, signed in with Authentik; the handler for mail links), each its newest release |
+| The family's apps | [SuperAwesomeMagical Browser](https://github.com/603Madison/SuperAwesomeMagicalBrowser) (Firefox in the family's look, tabs down the side), [Music](https://github.com/603Madison/SuperAwesomeMagicalMusic) (the desktop app for your Music server) and [Email](https://github.com/603Madison/SuperAwesomeMagicalEmail) (your mail, signed in with Authentik; the handler for mail links), and [SuperAwesomeMagicalOrchestrator](https://github.com/603Madison/SAM-DeviceOrchestrator)'s agent (one sign-in for all of them, and this computer among your devices), each its newest release |
 | Apps | Files (Nautilus), Text Editor, Image Viewer, Terminal (foot, fish), mpv, Software (Flathub) |
 | Fonts | Lexend (interface), Cascadia Code Nerd Font (code), Material Symbols (icons) |
 
@@ -54,7 +54,8 @@ systemctl reboot
 
 Either way, the system then follows `ghcr.io/603madison/superawesomemagicallinux:latest`, which
 CI rebuilds every day with Fedora's latest updates, within a few hours of a new release of the
-browser, Music or Email (so Firefox's security fixes arrive quickly), and after every change here.
+browser, Music, Email or the Orchestrator's agent (so Firefox's security fixes arrive quickly), and
+after every change here.
 
 ## Updating
 
@@ -117,6 +118,13 @@ the rest, and its search box finds a setting by name ("resolution", "tap to clic
   (Framework laptops do), and when the screen locks, turns off and the computer sleeps.
 - **Your account**, **Date & time** (network time, and the time zone set automatically to where you
   are) and **Accessibility** (text size, pointer size, less motion).
+- **Your account** is also where you sign in to your SuperAwesomeMagical account (the address of your
+  [SuperAwesomeMagicalOrchestrator](https://github.com/603Madison/SAM-DeviceOrchestrator)): once,
+  in the browser, with a code to compare; Music, Email and the family's other apps on this computer
+  are then signed in. **Your devices** shows your phone and other computers: ring one, send it the
+  clipboard, carry on with what another is doing, and choose whether notifications, the clipboard
+  and links travel between them. The phone and what to carry on with are also in quick settings.
+  From a terminal it's `sam-orchestrator` (`sam-orchestrator --help`).
 - **Wallpaper & style** can switch between light and dark at sunrise and sunset, or at set times.
 
 The clock keeps itself right from Cloudflare's time servers and Fedora's, and is put right at once

@@ -129,6 +129,14 @@ QtObject {
             }
         },
         Component {
+            // Your devices
+            StackPage {
+                Component {
+                    YourDevicesPage {}
+                }
+            }
+        },
+        Component {
             // Date & time
             StackPage {
                 Component {

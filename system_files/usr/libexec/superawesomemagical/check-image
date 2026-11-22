@@ -176,6 +176,40 @@ else
     printf '  skip  %s\n' "Email app (no release of it yet)"
 fi
 
+echo "SuperAwesomeMagicalOrchestrator (one sign-in, your devices)"
+shell=/etc/xdg/quickshell/caelestia
+check "shell's Orchestrator service" test -f "$shell/services/Orchestrator.qml"
+check "Settings has Your devices, in the same place in both registries" python3 -c '
+import re
+import sys
+from pathlib import Path
+
+nexus = Path(sys.argv[1])
+ids = re.findall(r"^\s+id: \"(\w+)\",$", (nexus / "PageRegistry.qml").read_text(), re.M)
+# Each page is one of the Components directly in pageComps (eight spaces in).
+comps = (nexus / "PageCompRegistry.qml").read_text().split("readonly property Component")[0]
+comps = re.split(r"^ {8}Component \{$", comps, flags=re.M)[1:]
+where = [i for i, comp in enumerate(comps) if "YourDevicesPage {}" in comp]
+ok = len(ids) == len(comps) and where == [ids.index("yourdevices")] and (nexus / "pages/YourDevicesPage.qml").is_file()
+sys.exit(not ok)' "$shell/modules/nexus"
+check "Your account signs in to it" grep -q "Orchestrator.signIn" "$shell/modules/nexus/pages/AccountPage.qml"
+check "start-shell wakes the agent at sign-in" grep -q "sam-orchestrator autostart" /usr/libexec/superawesomemagical/start-shell
+check "gdbus, for the agent's signals" command -v gdbus
+if rpm -q sam-orchestrator >/dev/null 2>&1; then
+    check "agent runs" sh -c 'sam-orchestrator --version | grep -q "^sam-orchestrator [0-9]"'
+    check "agent's libraries resolve" libs_resolve /usr/bin/sam-orchestrator
+    check "session bus starts the agent" grep -qx "Name=app.superawesomemagical.Orchestrator" /usr/share/dbus-1/services/app.superawesomemagical.Orchestrator.service
+    check "as its systemd user service" sh -c 'grep -qx "SystemdService=sam-orchestrator.service" /usr/share/dbus-1/services/app.superawesomemagical.Orchestrator.service &&
+        grep -qx "BusName=app.superawesomemagical.Orchestrator" /usr/lib/systemd/user/sam-orchestrator.service'
+    check "agent has the commands Settings runs" sh -c 'h=$(sam-orchestrator --help) && grep -q -- "--json" <<<"$h" &&
+        for c in status devices apps activities settings sign-in sign-out ring send-clipboard; do grep -q "^  $c " <<<"$h" || exit 1; done'
+    check "what it rings with (pw-play and a sound)" sh -c 'command -v pw-play && test -f /usr/share/sounds/freedesktop/stereo/phone-incoming-call.oga'
+    check "what it copies and opens links with" sh -c 'command -v wl-copy && command -v wl-paste && command -v xdg-open && command -v systemd-run'
+    check "its notifications go by our name" grep -qx "Name=SuperAwesomeMagical" /usr/share/applications/app.superawesomemagical.Orchestrator.desktop
+else
+    printf '  skip  %s\n' "the agent (no release of it to be seen when this was built; Settings says so)"
+fi
+
 echo "Sign-in and system"
 check "fingerprint unlock available" sh -c 'command -v fprintd-enroll && test -f /usr/lib64/security/pam_fprintd.so'
 check "sign-in theme" test -f /usr/share/sddm/themes/superawesomemagical/Main.qml

@@ -18,13 +18,14 @@ SYMBOLS_SHA256=7e74e36533ccee12c2b81e75bfcf3ccf123d3bb7e7e46d65d94445f23db0c97c
 
 HYPR_COPR=lionheartp/Hyprland
 
-# The family's apps (SuperAwesomeMagical Browser, Music and Email): a release tag each, or empty for
-# the newest. CI passes the newest explicitly and labels the image with them;
+# The family's apps (SuperAwesomeMagical Browser, Music, Email and the Orchestrator's agent): a
+# release tag each, or empty for the newest. CI passes the newest explicitly and labels the image with them;
 # .github/workflows/follow-apps.yml rebuilds when any has a newer one (the browser's carry Firefox's
 # security fixes).
 BROWSER_TAG=${BROWSER_TAG:-}
 MUSIC_TAG=${MUSIC_TAG:-}
 EMAIL_TAG=${EMAIL_TAG:-}
+ORCHESTRATOR_TAG=${ORCHESTRATOR_TAG:-}
 
 ### Repositories ##################################################################################
 
@@ -58,8 +59,10 @@ packages=(
     fprintd fprintd-pam
     grim slurp swappy wl-clipboard cliphist fuzzel libnotify dconf trash-cli
     gnome-keyring xdg-user-dirs xdg-utils
+    # What the Orchestrator's agent (below) rings with: pw-play and the sound it plays
+    pipewire-utils sound-theme-freedesktop
 
-    # Apps (and the family's own, below: the browser, Music and Email)
+    # Apps (and the family's own, below: the browser, Music, Email and the Orchestrator's agent)
     foot fish nautilus gvfs gvfs-mtp file-roller gnome-text-editor loupe mpv pavucontrol
     gnome-software fastfetch btop eza zoxide
 
@@ -107,6 +110,18 @@ if [ -n "$EMAIL_TAG" ]; then
         "SuperAwesomeMagicalEmail-Desktop-$EMAIL_TAG-x86_64.rpm"
 else
     echo "SuperAwesomeMagicalEmail has no release yet; leaving it out."
+fi
+
+# SuperAwesomeMagicalOrchestrator's agent (sam-orchestrator): one sign-in for the family's apps, and
+# this computer among the person's devices. Settings (Your account, Your devices) talks to it, and
+# start-shell wakes it at sign-in. Left out while its repository shows no release (Settings then
+# says so), and picked up by itself once it does.
+ORCHESTRATOR_TAG=${ORCHESTRATOR_TAG:-$(/ctx/newest-release.sh 603Madison/SAM-DeviceOrchestrator)}
+if [ -n "$ORCHESTRATOR_TAG" ]; then
+    install_release_rpm 603Madison/SAM-DeviceOrchestrator "$ORCHESTRATOR_TAG" \
+        "SuperAwesomeMagicalOrchestrator-Linux-$ORCHESTRATOR_TAG-x86_64.rpm"
+else
+    echo "SuperAwesomeMagicalOrchestrator has no release to be seen; leaving it out."
 fi
 rm -rf /tmp/apps
 

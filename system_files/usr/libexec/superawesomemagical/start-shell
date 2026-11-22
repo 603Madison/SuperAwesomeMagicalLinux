@@ -1,7 +1,8 @@
 #!/usr/bin/bash
 # Run by Hyprland as the desktop starts: on an account's first sign-in, switch it to the
 # SuperAwesomeMagical colours and wallpaper (the CLI themes the terminal, GTK apps and Hyprland
-# along with the shell), then start the shell.
+# along with the shell), wake the Orchestrator's agent if this account is signed in to one, then
+# start the shell.
 
 state=${XDG_STATE_HOME:-$HOME/.local/state}
 
@@ -10,6 +11,14 @@ if [ ! -e "$state/caelestia/scheme.json" ]; then
 fi
 if [ ! -e "$state/caelestia/wallpaper/path.txt" ]; then
     caelestia wallpaper --file /usr/share/backgrounds/superawesomemagical/aurora.jpg || true
+fi
+
+# SuperAwesomeMagicalOrchestrator's agent: its package has an XDG autostart entry for this, which a
+# plain Hyprland session doesn't run. It does nothing unless someone's signed in, and then only asks
+# the session bus for the agent (which runs it as its systemd service), so it's quick; it's in the
+# background all the same, so a slow bus can't hold the shell up.
+if command -v sam-orchestrator >/dev/null 2>&1; then
+    sam-orchestrator autostart >/dev/null 2>&1 &
 fi
 
 exec caelestia shell -d
