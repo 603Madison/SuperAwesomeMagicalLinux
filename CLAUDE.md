@@ -108,8 +108,10 @@ signed in). Music's and Email's desktop apps ask it for their sign-in tickets by
 
 The shell's side is `shell/services/Orchestrator.qml`. Quickshell can't call D-Bus methods, so it
 runs `sam-orchestrator … --json` (always as an argument list, with `--` before a device id or an
-address: those come from other devices and the server) and watches `gdbus monitor` on the agent's
-name for whether it's running and for its `Changed`/`ActivitiesChanged` signals. It only asks the
+address: those come from other devices and the server). Whether the agent is running comes from
+the bus's own `NameOwnerChanged` (`gdbus monitor --dest org.freedesktop.DBus`), and its
+`Changed`/`ActivitiesChanged` signals from a second `gdbus monitor` on the agent's connection
+(`:1.42`), never on its name: `gdbus monitor --dest <a name>` starts the service. It only asks the
 agent anything while the agent is already running or a Settings page holds `Orchestrator.refs`, so
 the agent isn't started for people who don't use it. Addresses from outside (a carry-on's, an app's)
 open only through `Orchestrator.open`, which keeps the agent's own rule: http(s) or one of the
